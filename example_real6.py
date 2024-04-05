@@ -54,7 +54,7 @@ class BildCirclesPlotter:
             print("No circles detected in the image.")
 
 class Bildvorverarbeitung:
-    def __init__(self, image_directory, target_height=750, target_width=750): # target_height=4504 target_width=4504
+    def __init__(self, image_directory, target_height, target_width): # target_height=4504 target_width=4504
         self.image_directory = image_directory                                  # target_height=650, target_width=650
         self.target_height   = target_height                                    
         self.target_width    = target_width
@@ -485,7 +485,7 @@ if __name__ == "__main__":
                        r"C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Dioptrie4",
                        r"C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Dioptrie5"
                        ]  
-    image_processor = Bildvorverarbeitung(image_directory)
+    image_processor = Bildvorverarbeitung(image_directory, target_height=750, target_width=750)
 
     images = image_processor.images[0]
     diopts = image_processor.images[1]
