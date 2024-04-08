@@ -15,6 +15,10 @@ import matplotlib.pyplot as plt
 from scipy import stats
 from sklearn.preprocessing import MinMaxScaler
 from decimal import Decimal
+from keras.applications import VGG16
+from keras.layers import Flatten, Dense
+from keras.models import Model
+
 
 class BildPlotter:
     def __init__(self, image_data):
@@ -29,11 +33,13 @@ class BildPlotter:
         plt.show()
 
 class Bildvorverarbeitung:
-    def __init__(self, image_directory, excel_directory, target_height, target_width): # target_height=4504 target_width=4504
+    def __init__(self, image_directory, excel_directory, target_height, target_width, x_offset, y_offset): 
         self.image_directory = image_directory
-        self.excel_directory = excel_directory                                         # target_height=750, target_width=750
+        self.excel_directory = excel_directory                                                             
         self.target_height   = target_height                                    
         self.target_width    = target_width
+        self.x_offset        = x_offset
+        self.y_offset        = y_offset
         self.images          = self.load_images_from_directory_call()
 
     def load_images_from_directory_call(self):
@@ -42,55 +48,209 @@ class Bildvorverarbeitung:
     
     def load_images_from_directory(self):
         images = []  
-        diopt = []   
-        key_list = []  
+        diopt = []    
 
         df = pd.read_excel(self.excel_directory) 
         title_exc = df['Title'].tolist()
         sample_exc = df['Sample'].tolist()
+        diopt_pre = df['OPTIC OF - Pre VD PB'].tolist()
+        diopt_post = df['OPTIC OF - Post VD PB'].tolist()
 
-        complete_directory = []
-        for directories in self.image_directory:
-            complete_directory.extend(os.listdir(directories))
+        for directory in self.image_directory:
+            directory_filenames = os.listdir(directory)
+            for filename in directory_filenames:
+                if filename.endswith(".jpg") or filename.endswith(".png"):
+                    base_name, ext = os.path.splitext(filename)
+                    parts = base_name.split("_")
 
-        for filename in complete_directory:
-            if filename.endswith(".jpg") or filename.endswith(".png"):
-                base_name, ext = os.path.splitext(filename)
-                parts = base_name.split("_")
+                    title_img = parts[2][:6]
+                    sample_img = parts[2][7:]
 
-                title_img = parts[2][:6]
-                sample_img = parts[2][7:]
+                    idx_title = [i for i, a in enumerate(title_exc) if a == title_img]
+                    idx_sample   = [i for i, a in enumerate(sample_exc) if a == int(sample_img)]
 
-                blasen = parts[1] == 'after'
+                    if len(idx_title) != 0 and len(idx_sample) != 0:
+                        if len(np.intersect1d(idx_title, idx_sample)) != 0:
+                            idx = np.intersect1d(idx_title, idx_sample)[0] 
+                        else:
+                            continue
+                        if not(np.isnan(diopt_post[idx])) and not(np.isnan(diopt_pre[idx])):
+                            diopt_delta = diopt_post[idx] - diopt_pre[idx]
+                        else:
+                            continue
+                    else:
+                        continue
 
-                key = int(parts[0][9:11])
-
-                num_str = parts[-1].replace(",", ".")
-                num = float(num_str)
-
-                if key in key_list:
-                    index = key_list.index(key)
-                else:
-                    key_list.append(key)
-                    images.append([])
-                    diopt.append([])
-                    index = len(images) - 1  
-
-                if blasen:
-                    images[index].insert(0, cv2.imread(os.path.join(self.image_directory[0], filename), cv2.IMREAD_GRAYSCALE))
-                    diopt[index].insert(0, num)
-                else:
-                    images[index].append(cv2.imread(os.path.join(self.image_directory[0], filename), cv2.IMREAD_GRAYSCALE))
-                    diopt[index].append(num)
+                    images.append(cv2.imread(os.path.join(directory, filename), cv2.IMREAD_GRAYSCALE))
+                    diopt.append(diopt_delta)
 
         return images, diopt
     
+    def crop_images(self, images):
+        cropped_images = []
+        for img in images:
+            if img.shape != (self.target_height, self.target_width):
+                original_height, original_width = img.shape[:2]
+                left = ((original_width - self.target_width) // 2 ) + self.x_offset
+                top = ((original_height - self.target_height) // 2 ) + self.y_offset
+                right = left + self.target_width 
+                bottom = top + self.target_height 
+                cropped_images.append(img[top:bottom, left:right]) 
+
+            else:
+                cropped_images.append(img) 
+        return cropped_images
+    
+class Merkmalsextraktion:
+    def __init__(self, images):
+        self.images = images
+
+    # Sharpen Versuch 1
+    def highpass_sharpen(self, kernel_size=3, alpha=1.0):
+        highpassed_images = []
+        for img in self.images:
+            laplacian = cv2.Laplacian(img, cv2.CV_64F, ksize=kernel_size, scale=1, delta=0, borderType=cv2.BORDER_DEFAULT)
+            highpassed_images_uncliped = img + alpha * laplacian
+            highpassed_images.append(np.clip(highpassed_images_uncliped, 0, 255).astype(np.uint8))
+        return highpassed_images
+    
+    # Sharpen Versuch 2
+    def unsharp_mask(self, kernel_size=(11, 11), sigma=3, amount=4.0, threshold=10): # kernel_size=(5, 5), sigma=1.0, amount=1.0, threshold=0
+        sharpened_images = []
+        for img in self.images:
+            blurred = cv2.GaussianBlur(img, kernel_size, sigma)
+            sharpened = int(amount + 1) * img - int(amount) * blurred # float was exchanged by an int
+            sharpened_images.append(np.maximum(sharpened, np.zeros_like(img)))
+        return sharpened_images
+
+    # Sharpen Versuch 3
+    def apply_canny(self):
+        canny_images = []
+        for img in self.images:
+            canny_images.append(cv2.Canny(img, 10, 300, L2gradient=True, apertureSize=7))
+        return canny_images
+    
+class BildPlotter:
+    def __init__(self, images):
+        self.images = images
+
+    def plot_image(self, option):
+        if option == 1:
+            fig, ax = plt.subplots()
+            ax.imshow(self.images, cmap='gray')
+            ax.set_xlabel('X-axis')
+            ax.set_ylabel('Y-axis')
+            ax.set_title('Sample Image')
+            plt.show()
+        elif option == 2:
+            # Create the subplot grid
+            fig, axs = plt.subplots(8, 11, figsize=(15, 15))
+
+            # Plot each image in the grid
+            for i in range(8):
+                for j in range(11):
+                    index = i * 11 + j
+                    if index < len(self.images):
+                        axs[i, j].imshow(self.images[index], cmap='gray')
+                        axs[i, j].axis("off")  # Turn off axis labels
+
+            # Adjust spacing between subplots
+            plt.subplots_adjust(wspace=0.05, hspace=0.05)
+            # Show the plot
+            plt.show()
+    
 if __name__ == "__main__":
-    image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Labeled1", 
-                       r"C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Labeled2", 
+    image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1", 
+                       r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2", 
                        ]  
     excel_directory = "example.xlsx"
-    image_processor = Bildvorverarbeitung(image_directory, excel_directory, target_height=750, target_width=750)
+    image_processor = Bildvorverarbeitung(image_directory, excel_directory, target_height=850, target_width=850, x_offset=-225, y_offset=1250)
 
     images = image_processor.images[0]
     diopts = image_processor.images[1]
+
+    images = image_processor.crop_images(images)
+
+    sharpen_image = Merkmalsextraktion(images) 
+    images = sharpen_image.unsharp_mask()
+
+    images = [image / 255 for image in images]
+
+    #highpass_image = Merkmalsextraktion(images)
+    #images = highpass_image.highpass_sharpen()
+
+    #canny_edged_image = Merkmalsextraktion(images)
+    #images = canny_edged_image.apply_canny()
+
+    #image_plotter = BildPlotter(images) 
+    #image_plotter.plot_image(2) # 1 soll images index werden, 2 darf es nicht
+
+    del images[55]
+    del diopts[55]
+
+    x = images
+    y = diopts
+
+    x_train, x_temp, y_train, y_temp = train_test_split(x, y, test_size=0.2, random_state=42)
+    x_val, x_test, y_val, y_test = train_test_split(x_temp, y_temp, test_size=0.5, random_state=42)
+
+    x_train = np.array(x_train)
+    x_val   = np.array(x_val)
+    x_test  = np.array(x_test)
+
+    y_train = np.array(y_train)
+    y_val   = np.array(y_val)
+    y_test  = np.array(y_test)
+
+    # Assuming X_train, X_val, y_train, y_val are your data arrays
+    x_train_rgb = np.repeat(x_train[..., np.newaxis], 3, axis=-1)
+    x_val_rgb = np.repeat(x_val[..., np.newaxis], 3, axis=-1)
+    x_test_rgb = np.repeat(x_test[..., np.newaxis], 3, axis=-1)
+
+    # Load the pre-trained VGG16 model (excluding the top classification layers)
+    base_model = VGG16(weights='imagenet', include_top=False, input_shape=(750, 750, 3)) 
+
+    # Freeze the pre-trained layers
+    for layer in base_model.layers:
+        layer.trainable = False
+
+    # Add custom layers for regression
+    x = base_model.output
+    x = Flatten()(x)
+    x = Dense(512, activation='relu')(x)
+    x = Dense(256, activation='relu')(x)
+    output_layer = Dense(1, activation='linear')(x)  # Regression output
+
+    # Create the final regression model
+    model = Model(inputs=base_model.input, outputs=output_layer)
+
+    # Compile the model with mean squared error (MSE) loss
+    model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
+
+    # Summary of the modified model architecture
+    model.summary()
+
+    # Train the model
+    history = model.fit(x_train_rgb, y_train, epochs=20, batch_size=16, validation_data=(x_val_rgb, y_val)) 
+
+    test_loss, test_mae = model.evaluate(x_test_rgb, y_test)
+    print(f"Test Loss: {test_loss:.4f}, Test MAE: {test_mae:.4f}")
+
+    plt.plot(history.history['loss'], label='train')
+    plt.plot(history.history['val_loss'], label='validation')  
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title('Training and Validation Loss Curves')
+    plt.legend()
+    plt.show()
+
+    y_pred_test = model.predict(x_test_rgb)
+
+    plt.scatter(y_test, y_pred_test, alpha=0.5)
+    plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], color='r', linestyle='--', label='Ideal Line')
+    plt.xlabel('True Values')
+    plt.ylabel('Predictions')
+    plt.title('Predictions vs. True Values')
+    plt.show()
+
+    print('Hello World')
