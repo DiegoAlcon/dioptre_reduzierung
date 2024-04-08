@@ -10,6 +10,7 @@ import tensorflow as tf
 from keras.utils import to_categorical
 from keras.callbacks import ModelCheckpoint, TensorBoard
 from sklearn.model_selection import train_test_split
+from keras.callbacks import EarlyStopping
 from keras.optimizers import Adam
 import matplotlib.pyplot as plt
 from scipy import stats
@@ -106,7 +107,7 @@ class Merkmalsextraktion:
         self.images = images
 
     # Sharpen Versuch 1
-    def highpass_sharpen(self, kernel_size=3, alpha=1.0):
+    def highpass_sharpen(self, kernel_size=7, alpha=2.0):
         highpassed_images = []
         for img in self.images:
             laplacian = cv2.Laplacian(img, cv2.CV_64F, ksize=kernel_size, scale=1, delta=0, borderType=cv2.BORDER_DEFAULT)
@@ -171,19 +172,19 @@ if __name__ == "__main__":
 
     images = image_processor.crop_images(images)
 
-    sharpen_image = Merkmalsextraktion(images) 
-    images = sharpen_image.unsharp_mask()
-
-    images = [image / 255 for image in images]
+    #sharpen_image = Merkmalsextraktion(images) 
+    #images = sharpen_image.unsharp_mask()
 
     #highpass_image = Merkmalsextraktion(images)
     #images = highpass_image.highpass_sharpen()
 
-    #canny_edged_image = Merkmalsextraktion(images)
-    #images = canny_edged_image.apply_canny()
+    canny_edged_image = Merkmalsextraktion(images)
+    images = canny_edged_image.apply_canny()
 
-    #image_plotter = BildPlotter(images) 
-    #image_plotter.plot_image(2) # 1 soll images index werden, 2 darf es nicht
+    images = [image / 255 for image in images]
+
+    image_plotter = BildPlotter(images) 
+    image_plotter.plot_image(2) # 1 soll images index werden, 2 darf es nicht
 
     del images[55]
     del diopts[55]
@@ -208,7 +209,7 @@ if __name__ == "__main__":
     x_test_rgb = np.repeat(x_test[..., np.newaxis], 3, axis=-1)
 
     # Load the pre-trained VGG16 model (excluding the top classification layers)
-    base_model = VGG16(weights='imagenet', include_top=False, input_shape=(750, 750, 3)) 
+    base_model = VGG16(weights='imagenet', include_top=False, input_shape=(850, 850, 3)) 
 
     # Freeze the pre-trained layers
     for layer in base_model.layers:
@@ -230,8 +231,11 @@ if __name__ == "__main__":
     # Summary of the modified model architecture
     model.summary()
 
+    # Define early stopping callback
+    early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=1, restore_best_weights=True)
+
     # Train the model
-    history = model.fit(x_train_rgb, y_train, epochs=20, batch_size=16, validation_data=(x_val_rgb, y_val)) 
+    history = model.fit(x_train_rgb, y_train, epochs=20, batch_size=16, validation_data=(x_val_rgb, y_val), callbacks=[early_stopping]) 
 
     test_loss, test_mae = model.evaluate(x_test_rgb, y_test)
     print(f"Test Loss: {test_loss:.4f}, Test MAE: {test_mae:.4f}")
