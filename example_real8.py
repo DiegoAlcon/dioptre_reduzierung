@@ -7,17 +7,17 @@ import numpy as np
 import pandas as pd
 import openpyxl
 import tensorflow as tf
-from keras.utils import to_categorical
-from keras.callbacks import ModelCheckpoint, TensorBoard
+#from keras.utils import to_categorical
+#from keras.callbacks import ModelCheckpoint, TensorBoard
 from sklearn.model_selection import train_test_split
 from keras.callbacks import EarlyStopping
-from keras.optimizers import Adam
+#from keras.optimizers import Adam
 import matplotlib.pyplot as plt
-from scipy import stats
-from sklearn.preprocessing import MinMaxScaler
-from decimal import Decimal
-from keras.applications import VGG16
-from keras.layers import Flatten, Dense
+#from scipy import stats
+#from sklearn.preprocessing import MinMaxScaler
+#from decimal import Decimal
+#from keras.applications import VGG16
+from keras.layers import Input, Flatten, Dense
 from keras.models import Model
 
 
@@ -199,22 +199,24 @@ if __name__ == "__main__":
     y_val   = np.array(y_val)
     y_test  = np.array(y_test)
 
-    x_train_rgb = np.repeat(x_train[..., np.newaxis], 3, axis=-1)
-    x_val_rgb = np.repeat(x_val[..., np.newaxis], 3, axis=-1)
-    x_test_rgb = np.repeat(x_test[..., np.newaxis], 3, axis=-1)
+    # Create a custom VGG16-like architecture
+    input_layer = Input(shape=(850, 850, 1))
+    x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(input_layer)
+    x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.MaxPooling2D((2, 2))(x)
+    x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.MaxPooling2D((2, 2))(x)
+    x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.MaxPooling2D((2, 2))(x)
+    x = tf.keras.layers.Flatten()(x)
+    x = tf.keras.layers.Dense(512, activation='relu')(x)
+    x = tf.keras.layers.Dense(256, activation='relu')(x)
+    output_layer = tf.keras.layers.Dense(1, activation='linear')(x)
 
-    base_model = VGG16(weights='imagenet', include_top=False, input_shape=(850, 850, 3)) 
-
-    for layer in base_model.layers:
-        layer.trainable = False
-
-    x = base_model.output
-    x = Flatten()(x)
-    x = Dense(512, activation='relu')(x)
-    x = Dense(256, activation='relu')(x)
-    output_layer = Dense(1, activation='linear')(x)  
-
-    model = Model(inputs=base_model.input, outputs=output_layer)
+    # Create the model
+    model = Model(inputs=input_layer, outputs=output_layer)
 
     model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
 
@@ -222,9 +224,9 @@ if __name__ == "__main__":
 
     early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=1, restore_best_weights=True)
 
-    history = model.fit(x_train_rgb, y_train, epochs=20, batch_size=16, validation_data=(x_val_rgb, y_val), callbacks=[early_stopping]) 
+    history = model.fit(x_train, y_train, epochs=20, batch_size=16, validation_data=(x_val, y_val), callbacks=[early_stopping]) 
 
-    test_loss, test_mae = model.evaluate(x_test_rgb, y_test)
+    test_loss, test_mae = model.evaluate(x_test, y_test)
     print(f"Test Loss: {test_loss:.4f}, Test MAE: {test_mae:.4f}")
 
     plt.plot(history.history['loss'], label='train')
@@ -235,7 +237,7 @@ if __name__ == "__main__":
     plt.legend()
     plt.show()
 
-    y_pred_test = model.predict(x_test_rgb)
+    y_pred_test = model.predict(x_test)
 
     plt.scatter(y_test, y_pred_test, alpha=0.5)
     plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], color='r', linestyle='--', label='Ideal Line')
