@@ -160,9 +160,14 @@ class BildPlotter:
             plt.show()
     
 if __name__ == "__main__":
-    image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1", 
-                       r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2", 
-                       ]  
+    # For kleiner Rechner:
+    #image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1", 
+    #                   r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2", 
+    #                   ]  
+    # For riesiger Rechner:
+    image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\Labeled1",
+                       r"C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\Labeled2",
+                       ]
     excel_directory = "example.xlsx"
     image_processor = Bildvorverarbeitung(image_directory, excel_directory, target_height=850, target_width=850, x_offset=-225, y_offset=1250)
 
@@ -171,8 +176,8 @@ if __name__ == "__main__":
 
     images = image_processor.crop_images(images)
 
-    sharpen_image = Merkmalsextraktion(images) 
-    images = sharpen_image.unsharp_mask()
+    #sharpen_image = Merkmalsextraktion(images) 
+    #images = sharpen_image.unsharp_mask()
 
     images = [image / 255 for image in images]
 
@@ -182,8 +187,8 @@ if __name__ == "__main__":
     #canny_edged_image = Merkmalsextraktion(images)
     #images = canny_edged_image.apply_canny()
 
-    #image_plotter = BildPlotter(images) 
-    #image_plotter.plot_image(2) # 1 soll images index werden, 2 darf es nicht
+    image_plotter = BildPlotter(images) 
+    image_plotter.plot_image(2) # 1 soll images index werden, 2 darf es nicht
 
     del images[55]
     del diopts[55]
@@ -208,7 +213,7 @@ if __name__ == "__main__":
     x_test_rgb = np.repeat(x_test[..., np.newaxis], 3, axis=-1)
 
     # Load the pre-trained VGG16 model (excluding the top classification layers)
-    base_model = VGG16(weights='imagenet', include_top=False, input_shape=(750, 750, 3)) 
+    base_model = VGG16(weights='imagenet', include_top=False, input_shape=(850, 850, 3)) 
 
     # Freeze the pre-trained layers
     for layer in base_model.layers:
