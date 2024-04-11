@@ -5,7 +5,7 @@ import keras
 from keras import layers
 import numpy as np
 import pandas as pd
-import openpyxl
+#import openpyxl
 import tensorflow as tf
 #from keras.utils import to_categorical
 #from keras.callbacks import ModelCheckpoint, TensorBoard
@@ -182,16 +182,6 @@ if __name__ == "__main__":
     image_plotter = BildPlotter(images) 
     image_plotter.plot_image(2) # 1 soll images index werden, 2 darf es nicht
 
-    #factor = 3
-
-    #new_height = images[0].shape[0] // factor
-    #new_width   = images[0].shape[1] // factor
-
-    #images = [cv2.resize(img, (new_height, new_width), interpolation=cv2.INTER_AREA) for img in images]
-
-    #image_plotter = BildPlotter(images) 
-    #image_plotter.plot_image(2) # 1 soll images index werden, 2 darf es nicht
-
     del images[55]
     del diopts[55]
 
@@ -209,43 +199,13 @@ if __name__ == "__main__":
     y_val   = np.array(y_val)
     y_test  = np.array(y_test)
 
-    # Create a custom VGG16-like architecture
-    #input_layer = Input(shape=(850, 850, 1))
-    #x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(input_layer)
-    #x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Flatten()(x)
-    #x = tf.keras.layers.Dense(512, activation='relu')(x)
-    #x = tf.keras.layers.Dense(256, activation='relu')(x)
-    #output_layer = tf.keras.layers.Dense(1, activation='linear')(x)
-
-    #input_layer = Input(shape=(850, 850, 1))
-    #x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(input_layer)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Flatten()(x)
-    #x = tf.keras.layers.Dense(512, activation='relu')(x)
-    #output_layer = tf.keras.layers.Dense(1, activation='linear')(x)
-
     input_layer = Input(shape=(850, 850, 1))
     x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(input_layer)
     x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    x = tf.keras.layers.MaxPooling2D((2, 2))(x)
     x = tf.keras.layers.Flatten()(x)
-    x = tf.keras.layers.Dense(256, activation='relu')(x)
+    x = tf.keras.layers.Dense(64, activation='relu')(x)
     output_layer = tf.keras.layers.Dense(1, activation='linear')(x)
 
-    # Create the model
     model = Model(inputs=input_layer, outputs=output_layer)
 
     model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
@@ -254,7 +214,7 @@ if __name__ == "__main__":
 
     early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=1, restore_best_weights=True)
 
-    history = model.fit(x_train, y_train, epochs=20, batch_size=16, validation_data=(x_val, y_val), callbacks=[early_stopping]) 
+    history = model.fit(x_train, y_train, epochs=10, batch_size=16, validation_data=(x_val, y_val), callbacks=[early_stopping]) 
 
     test_loss, test_mae = model.evaluate(x_test, y_test)
     print(f"Test Loss: {test_loss:.4f}, Test MAE: {test_mae:.4f}")

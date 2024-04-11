@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 #from keras.applications import VGG16
 from keras.layers import Input, Flatten, Dense
 from keras.models import Model
+from scipy import fftpack, ndimage
 
 
 class BildPlotter:
@@ -166,6 +167,34 @@ if __name__ == "__main__":
     images = image_processor.images[0]
     diopts = image_processor.images[1]
 
+    ###############################################################################
+
+    # Compute the 2D FFT
+    #fft2 = fftpack.fft2(images[0])
+
+    # Compute the magnitude spectrum (frequency domain)
+    #magnitude_spectrum = np.abs(fft2)
+
+    # Display the magnitude spectrum
+    #plt.imshow(np.log1p(magnitude_spectrum), cmap='gray')
+    #plt.title("Frequency Domain")
+    #plt.colorbar(label="Log Magnitude")
+    #plt.show()
+
+    ############################################################################################
+
+    #factor = 3
+
+    #new_height = images[0].shape[0] // factor
+    #new_width = images[0].shape[1] // factor
+
+    #images = [cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_AREA) for img in images]
+
+    #image_plotter = BildPlotter(images[0]) 
+    #image_plotter.plot_image(1) # 1 soll images index werden, 2 darf es nicht
+
+    ##################################################################################
+
     images = image_processor.crop_images(images)
 
     #sharpen_image = Merkmalsextraktion(images) 
@@ -179,18 +208,18 @@ if __name__ == "__main__":
 
     images = [image / 255 for image in images]
 
+    factor = 2
+
+    new_height = images[0].shape[0] // factor
+    new_width = images[0].shape[1] // factor
+
+    images = [cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_AREA) for img in images]
+
+    image_plotter = BildPlotter(images[0]) 
+    image_plotter.plot_image(1) # 1 soll images index werden, 2 darf es nicht
+
     image_plotter = BildPlotter(images) 
     image_plotter.plot_image(2) # 1 soll images index werden, 2 darf es nicht
-
-    #factor = 3
-
-    #new_height = images[0].shape[0] // factor
-    #new_width   = images[0].shape[1] // factor
-
-    #images = [cv2.resize(img, (new_height, new_width), interpolation=cv2.INTER_AREA) for img in images]
-
-    #image_plotter = BildPlotter(images) 
-    #image_plotter.plot_image(2) # 1 soll images index werden, 2 darf es nicht
 
     del images[55]
     del diopts[55]
@@ -210,38 +239,18 @@ if __name__ == "__main__":
     y_test  = np.array(y_test)
 
     # Create a custom VGG16-like architecture
-    #input_layer = Input(shape=(850, 850, 1))
-    #x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(input_layer)
-    #x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Flatten()(x)
-    #x = tf.keras.layers.Dense(512, activation='relu')(x)
-    #x = tf.keras.layers.Dense(256, activation='relu')(x)
-    #output_layer = tf.keras.layers.Dense(1, activation='linear')(x)
-
-    #input_layer = Input(shape=(850, 850, 1))
-    #x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(input_layer)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Flatten()(x)
-    #x = tf.keras.layers.Dense(512, activation='relu')(x)
-    #output_layer = tf.keras.layers.Dense(1, activation='linear')(x)
-
-    input_layer = Input(shape=(850, 850, 1))
+    input_layer = Input(shape=(new_height, new_width, 1))
     x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(input_layer)
+    x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
     x = tf.keras.layers.MaxPooling2D((2, 2))(x)
     x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.MaxPooling2D((2, 2))(x)
+    x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
     x = tf.keras.layers.MaxPooling2D((2, 2))(x)
     x = tf.keras.layers.Flatten()(x)
+    x = tf.keras.layers.Dense(512, activation='relu')(x)
     x = tf.keras.layers.Dense(256, activation='relu')(x)
     output_layer = tf.keras.layers.Dense(1, activation='linear')(x)
 
@@ -254,7 +263,7 @@ if __name__ == "__main__":
 
     early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=1, restore_best_weights=True)
 
-    history = model.fit(x_train, y_train, epochs=20, batch_size=16, validation_data=(x_val, y_val), callbacks=[early_stopping]) 
+    history = model.fit(x_train, y_train, epochs=10, batch_size=8, validation_data=(x_val, y_val), callbacks=[early_stopping]) 
 
     test_loss, test_mae = model.evaluate(x_test, y_test)
     print(f"Test Loss: {test_loss:.4f}, Test MAE: {test_mae:.4f}")

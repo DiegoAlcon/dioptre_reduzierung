@@ -179,8 +179,8 @@ if __name__ == "__main__":
 
     images = [image / 255 for image in images]
 
-    image_plotter = BildPlotter(images) 
-    image_plotter.plot_image(2) # 1 soll images index werden, 2 darf es nicht
+    #image_plotter = BildPlotter(images) 
+    #image_plotter.plot_image(2) # 1 soll images index werden, 2 darf es nicht
 
     del images[55]
     del diopts[55]
@@ -203,7 +203,7 @@ if __name__ == "__main__":
     x_val_rgb = np.repeat(x_val[..., np.newaxis], 3, axis=-1)
     x_test_rgb = np.repeat(x_test[..., np.newaxis], 3, axis=-1)
 
-    base_model = VGG16(weights='imagenet', include_top=False, input_shape=(850, 850, 3)) 
+    base_model = VGG16(weights='imagenet', include_top=False, input_shape=(850, 850, 3)) # 850 850 3
 
     for layer in base_model.layers:
         layer.trainable = False
@@ -222,7 +222,7 @@ if __name__ == "__main__":
 
     early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=1, restore_best_weights=True)
 
-    history = model.fit(x_train_rgb, y_train, epochs=20, batch_size=16, validation_data=(x_val_rgb, y_val), callbacks=[early_stopping]) 
+    history = model.fit(x_train_rgb, y_train, epochs=10, batch_size=16, validation_data=(x_val_rgb, y_val), callbacks=[early_stopping]) 
 
     test_loss, test_mae = model.evaluate(x_test_rgb, y_test)
     print(f"Test Loss: {test_loss:.4f}, Test MAE: {test_mae:.4f}")
