@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import pandas as pd
 import cv2
 import tensorflow as tf
@@ -142,6 +143,8 @@ class NeuralNet:
     # Define the U-Net model
     def unet_model(self, input_shape):
         inputs = tf.keras.Input(shape=input_shape)
+        #inputs = [tf.keras.Input(shape=input_shape) for _ in range(num_images)]
+        #inputs = layers.concatenate(inputs, axis=-1)
 
         # Encoder (downsampling)
         conv1 = layers.Conv2D(64, 3, activation="relu", padding="same")(inputs)
@@ -176,9 +179,14 @@ class NeuralNet:
 ##############################################################################################################################################################################
 
 if __name__ == "__main__":
-    image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1", 
-                       r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2", 
-                       ]  
+    # Klein Rechner
+    #image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1", 
+    #                   r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2", 
+    #                   ]  
+    # Mittlere Rechner
+    image_directory = [r"C:\Users\SANCHDI2\dioptre_reduzierung\Labeled1",
+                       r"C:\Users\SANCHDI2\dioptre_reduzierung\Labeled2"
+                        ]
     excel_directory = "example.xlsx"
     image_processor = Bildvorverarbeitung(image_directory, excel_directory, target_height=900, target_width=900, x_offset=-225, y_offset=1250)
 
@@ -203,28 +211,41 @@ if __name__ == "__main__":
     test_size = int(0.5 * len(x_temp))
     x_val, x_test = x_temp[:test_size], x_temp[test_size:]
 
-    folder_path = r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\masks"
+    folder_path = r"C:\Users\SANCHDI2\dioptre_reduzierung\masks"
     x_masks = []
     for filename in os.listdir(folder_path):
         if filename.lower().endswith(".jpg"):
             img_path = os.path.join(folder_path, filename)
-            img_array = cv2.imread(img_path)
+            img_array = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
             if img_array is not None:
                 x_masks.append(img_array)
     x_train_masks = x_masks[:69]
     x_val_masks   = x_masks[69:78]
     x_test_masks  = x_masks[78:]
 
+    x_train = np.array(x_train)
+    x_val   = np.array(x_val)
+    x_test  = np.array(x_test)
+
+    x_train_masks = np.array(x_train_masks)
+    x_val_masks   = np.array(x_val_masks)
+    x_test_masks  = np.array(x_test_masks)
+
     # Create thU-Net model
-    input_shape = (x[0].shape[0], x[0].shape[1], 1)  # input size 
+    input_shape = (x[0].shape[0], x[0].shape[1], 1)  
+    #num_images  = len(x_train)
     neural_net = NeuralNet()
     model = neural_net.unet_model(input_shape)
 
     # Compile the model
     model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
 
+    model.summary()
+
+    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, verbose=1, restore_best_weights=True)
+
     # Train the model
-    model.fit(x_train, x_train_masks, epochs=10, validation_data=(x_val, x_val_masks))
+    model.fit(x_train, x_train_masks, epochs=10, batch_size=16, validation_data=(x_val, x_val_masks), callbacks=[early_stopping])
 
     # Evaluate the model on test data
     test_loss, test_accuracy = model.evaluate(x_test, x_test_masks)
@@ -239,3 +260,5 @@ if __name__ == "__main__":
     # Count total pixels predicted to belong to the object
     total_predicted_pixels = int((test_predictions > 0).sum())
     print(f"Total predicted pixels: {total_predicted_pixels}")
+
+    print('Hello world')
