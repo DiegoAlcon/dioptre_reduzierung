@@ -22,16 +22,29 @@ from keras.models import Model
 
 
 class BildPlotter:
-    def __init__(self, image_data):
-        self.image_data = image_data
+    def __init__(self, images):
+        self.images = images
 
-    def plot_image(self):
-        fig, ax = plt.subplots()
-        ax.imshow(self.image_data, cmap='gray')
-        ax.set_xlabel('X-axis')
-        ax.set_ylabel('Y-axis')
-        ax.set_title('Sample Image')
-        plt.show()
+    def plot_image(self, option):
+        if option == 1:
+            fig, ax = plt.subplots()
+            ax.imshow(self.images, cmap='gray')
+            ax.set_xlabel('X-axis')
+            ax.set_ylabel('Y-axis')
+            ax.set_title('Sample Image')
+            plt.show()
+        elif option == 2:
+            fig, axs = plt.subplots(8, 11, figsize=(15, 15))
+
+            for i in range(8):
+                for j in range(11):
+                    index = i * 11 + j
+                    if index < len(self.images):
+                        axs[i, j].imshow(self.images[index], cmap='gray')
+                        axs[i, j].axis("off") 
+
+            plt.subplots_adjust(wspace=0.05, hspace=0.05)
+            plt.show()
 
 class Bildvorverarbeitung:
     def __init__(self, image_directory, excel_directory, target_height, target_width, x_offset, y_offset): 
@@ -131,37 +144,12 @@ class Merkmalsextraktion:
             canny_images.append(cv2.Canny(img, 10, 300, L2gradient=True, apertureSize=7))
         return canny_images
     
-class BildPlotter:
-    def __init__(self, images):
-        self.images = images
-
-    def plot_image(self, option):
-        if option == 1:
-            fig, ax = plt.subplots()
-            ax.imshow(self.images, cmap='gray')
-            ax.set_xlabel('X-axis')
-            ax.set_ylabel('Y-axis')
-            ax.set_title('Sample Image')
-            plt.show()
-        elif option == 2:
-            fig, axs = plt.subplots(8, 11, figsize=(15, 15))
-
-            for i in range(8):
-                for j in range(11):
-                    index = i * 11 + j
-                    if index < len(self.images):
-                        axs[i, j].imshow(self.images[index], cmap='gray')
-                        axs[i, j].axis("off") 
-
-            plt.subplots_adjust(wspace=0.05, hspace=0.05)
-            plt.show()
-    
 if __name__ == "__main__":
     image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1", 
                        r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2", 
                        ]  
     excel_directory = "example.xlsx"
-    image_processor = Bildvorverarbeitung(image_directory, excel_directory, target_height=850, target_width=850, x_offset=-225, y_offset=1250)
+    image_processor = Bildvorverarbeitung(image_directory, excel_directory, target_height=1000, target_width=1000, x_offset=-225, y_offset=1250) # 850 850
 
     images = image_processor.images[0]
     diopts = image_processor.images[1]
@@ -174,10 +162,10 @@ if __name__ == "__main__":
     #highpass_image = Merkmalsextraktion(images)
     #images = highpass_image.highpass_sharpen()
 
-    canny_edged_image = Merkmalsextraktion(images)
-    images = canny_edged_image.apply_canny()
+    #canny_edged_image = Merkmalsextraktion(images)
+    #images = canny_edged_image.apply_canny()
 
-    images = [image / 255 for image in images]
+    #images = [image / 255 for image in images]
 
     image_plotter = BildPlotter(images) 
     image_plotter.plot_image(2) # 1 soll images index werden, 2 darf es nicht

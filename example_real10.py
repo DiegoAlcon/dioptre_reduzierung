@@ -23,16 +23,29 @@ from scipy import fftpack, ndimage
 
 
 class BildPlotter:
-    def __init__(self, image_data):
-        self.image_data = image_data
+    def __init__(self, images):
+        self.images = images
 
-    def plot_image(self):
-        fig, ax = plt.subplots()
-        ax.imshow(self.image_data, cmap='gray')
-        ax.set_xlabel('X-axis')
-        ax.set_ylabel('Y-axis')
-        ax.set_title('Sample Image')
-        plt.show()
+    def plot_image(self, option):
+        if option == 1:
+            fig, ax = plt.subplots()
+            ax.imshow(self.images, cmap='gray')
+            ax.set_xlabel('X-axis')
+            ax.set_ylabel('Y-axis')
+            ax.set_title('Sample Image')
+            plt.show()
+        elif option == 2:
+            fig, axs = plt.subplots(8, 12, figsize=(15, 15))
+
+            for i in range(8):
+                for j in range(12):
+                    index = i * 12 + j
+                    if index < len(self.images):
+                        axs[i, j].imshow(self.images[index], cmap='gray')
+                        axs[i, j].axis("off") 
+
+            plt.subplots_adjust(wspace=0.05, hspace=0.05)
+            plt.show()
 
 class Bildvorverarbeitung:
     def __init__(self, image_directory, excel_directory, target_height, target_width, x_offset, y_offset): 
@@ -58,10 +71,15 @@ class Bildvorverarbeitung:
         diopt_pre = df['OPTIC OF - Pre VD PB'].tolist()
         diopt_post = df['OPTIC OF - Post VD PB'].tolist()
 
+        number_of_images_in_folders = 0
+        number_of_images_in_folders_and_excel = 0
+        number_of_images_in_folders_and_excel_with_data = 0
+
         for directory in self.image_directory:
             directory_filenames = os.listdir(directory)
             for filename in directory_filenames:
                 if filename.endswith(".jpg") or filename.endswith(".png"):
+                    number_of_images_in_folders += 1
                     base_name, ext = os.path.splitext(filename)
                     parts = base_name.split("_")
 
@@ -73,10 +91,12 @@ class Bildvorverarbeitung:
 
                     if len(idx_title) != 0 and len(idx_sample) != 0:
                         if len(np.intersect1d(idx_title, idx_sample)) != 0:
+                            number_of_images_in_folders_and_excel += 1
                             idx = np.intersect1d(idx_title, idx_sample)[0] 
                         else:
                             continue
                         if not(np.isnan(diopt_post[idx])) and not(np.isnan(diopt_pre[idx])):
+                            number_of_images_in_folders_and_excel_with_data += 1
                             diopt_delta = diopt_post[idx] - diopt_pre[idx]
                         else:
                             continue
@@ -86,6 +106,9 @@ class Bildvorverarbeitung:
                     images.append(cv2.imread(os.path.join(directory, filename), cv2.IMREAD_GRAYSCALE))
                     diopt.append(diopt_delta)
 
+        print('Number of images in folders: ', number_of_images_in_folders)
+        print('Number of images in folders and excel: ', number_of_images_in_folders_and_excel)
+        print('Number of images in folders and excel with data: ', number_of_images_in_folders_and_excel_with_data)
         return images, diopt
     
     def crop_images(self, images):
@@ -132,36 +155,12 @@ class Merkmalsextraktion:
             canny_images.append(cv2.Canny(img, 10, 300, L2gradient=True, apertureSize=7))
         return canny_images
     
-class BildPlotter:
-    def __init__(self, images):
-        self.images = images
-
-    def plot_image(self, option):
-        if option == 1:
-            fig, ax = plt.subplots()
-            ax.imshow(self.images, cmap='gray')
-            ax.set_xlabel('X-axis')
-            ax.set_ylabel('Y-axis')
-            ax.set_title('Sample Image')
-            plt.show()
-        elif option == 2:
-            fig, axs = plt.subplots(8, 11, figsize=(15, 15))
-
-            for i in range(8):
-                for j in range(11):
-                    index = i * 11 + j
-                    if index < len(self.images):
-                        axs[i, j].imshow(self.images[index], cmap='gray')
-                        axs[i, j].axis("off") 
-
-            plt.subplots_adjust(wspace=0.05, hspace=0.05)
-            plt.show()
-    
 if __name__ == "__main__":
-    image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1", 
-                       r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2", 
+    image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1_18_4", 
+                       r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2_18_4", 
                        ]  
     excel_directory = "example.xlsx"
+    #excel_directory = "optical_dioptre_18_4.xlsx"
     image_processor = Bildvorverarbeitung(image_directory, excel_directory, target_height=850, target_width=850, x_offset=-225, y_offset=1250)
 
     images = image_processor.images[0]
@@ -195,7 +194,7 @@ if __name__ == "__main__":
 
     ##################################################################################
 
-    images = image_processor.crop_images(images)
+    #images = image_processor.crop_images(images)
 
     #sharpen_image = Merkmalsextraktion(images) 
     #images = sharpen_image.unsharp_mask()
@@ -203,8 +202,11 @@ if __name__ == "__main__":
     #highpass_image = Merkmalsextraktion(images)
     #images = highpass_image.highpass_sharpen()
 
-    canny_edged_image = Merkmalsextraktion(images)
-    images = canny_edged_image.apply_canny()
+    #canny_edged_image = Merkmalsextraktion(images)
+    #images = canny_edged_image.apply_canny()
+
+    image_plotter = BildPlotter(images) 
+    image_plotter.plot_image(2) # 1 soll images index werden, 2 darf es nicht
 
     images = [image / 255 for image in images]
 
