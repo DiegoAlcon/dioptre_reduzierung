@@ -5,6 +5,7 @@ import numpy as np
 import os
 import pandas as pd
 import cv2
+import pickle
 
 class Bildvorverarbeitung:
     def __init__(self, image_directory, excel_directory, target_height, target_width, x_offset, y_offset): 
@@ -103,3 +104,6 @@ if __name__ == "__main__":
         file_number += 1
         output_path = os.path.join(r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\original', f"original_{file_number}.jpg")
         plt.imsave(output_path, img, cmap='gray', pil_kwargs={'compress_level': 0})
+
+    with open("test", "wb") as fp:   
+        pickle.dump(diopts, fp)
