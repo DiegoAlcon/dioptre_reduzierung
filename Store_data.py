@@ -6,6 +6,7 @@ import os
 import pandas as pd
 import cv2
 import pickle
+import glob
 
 class Bildvorverarbeitung:
     def __init__(self, image_directory, excel_directory, target_height, target_width, x_offset, y_offset): 
@@ -30,6 +31,7 @@ class Bildvorverarbeitung:
         sample_exc = df['Sample'].tolist()
         diopt_pre = df['OPTIC OF - Pre VD PB'].tolist()
         diopt_post = df['OPTIC OF - Post VD PB'].tolist()
+        diopt_abs = df['OPTIC OF - Diopter'].tolist()
 
         number_of_images_in_folders = 0
         number_of_images_in_folders_and_excel = 0
@@ -60,6 +62,11 @@ class Bildvorverarbeitung:
                             diopt_delta = diopt_post[idx] - diopt_pre[idx]
                         else:
                             continue
+                        #if not(np.isnan(diopt_abs[idx])):
+                        #    number_of_images_in_folders_and_excel_with_data += 1
+                        #    diopt_delta = diopt_abs[idx]
+                        #else:
+                        #    continue
                     else:
                         continue
 
@@ -98,6 +105,13 @@ if __name__ == "__main__":
     diopts = image_processor.images[1]
 
     images = image_processor.crop_images(images)
+
+    directory = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\original\*'
+    files = glob.glob(directory)
+
+    for file in files:
+        if os.path.exists(file):
+            os.remove(file)
 
     file_number = 0
     for img in images:

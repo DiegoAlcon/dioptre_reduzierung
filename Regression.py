@@ -31,7 +31,8 @@ with open("test", "rb") as fp:
 
 original_y = diopts
 
-y = list(filter(lambda x: -5 < x < 5, original_y))
+y = list(filter(lambda x: -5 < x < 5, original_y)) # to filter dioptre
+#y = original_y # to not filter dioptre
 
 preserved_img = [1 if x in y else 0 for x in original_y]
 
