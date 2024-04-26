@@ -19,6 +19,7 @@ from scipy import fftpack, ndimage
 import pickle
 import tensorflow as tf
 from tensorflow.keras.applications import VGG16
+from keras import backend as K
 
 class BildPlotter:
     def __init__(self, images):
@@ -112,31 +113,48 @@ class NeuralNet:
         return model
     
     def TL_unet_model(self, input_shape):
-        # Load pre-trained VGG16 model (excluding top layers)
-        vgg16_base = VGG16(weights="imagenet", include_top=False, input_shape=input_shape)
-
-        # Freeze the pre-trained layers
-        for layer in vgg16_base.layers:
-            layer.trainable = False
-
-        # Get the output from the last convolutional layer of VGG16
-        encoder_output = vgg16_base.get_layer("block5_conv3").output
-
-        # Decoder (upsampling)
-        up4 = layers.UpSampling2D(size=(2, 2))(encoder_output)
-        concat4 = layers.concatenate([vgg16_base.get_layer("block4_conv3").output, up4], axis=-1)
-        conv4 = layers.Conv2D(128, 3, activation="relu", padding="same")(concat4)
-        conv4 = layers.Conv2D(128, 3, activation="relu", padding="same")(conv4)
-
-        up5 = layers.UpSampling2D(size=(2, 2))(conv4)
-        concat5 = layers.concatenate([vgg16_base.get_layer("block3_conv3").output, up5], axis=-1)
-        conv5 = layers.Conv2D(64, 3, activation="relu", padding="same")(concat5)
-        conv5 = layers.Conv2D(64, 3, activation="relu", padding="same")(conv5)
-
-        # Output layer
-        outputs = layers.Conv2D(1, 1, activation="sigmoid")(conv5)
-
-        model = tf.keras.Model(inputs=vgg16_base.input, outputs=outputs)
+        ## Load pre-trained VGG16 model (excluding top layers)
+        #vgg16_base = VGG16(weights="imagenet", include_top=False, input_shape=input_shape)
+        ## Freeze the pre-trained layers
+        #for layer in vgg16_base.layers:
+        #    layer.trainable = False
+        ## Get the output from the last convolutional layer of VGG16
+        #encoder_output = vgg16_base.get_layer("block5_conv3").output
+        ## Decoder (upsampling)
+        #up4 = layers.UpSampling2D(size=(2, 2))(encoder_output)
+        #concat4 = layers.concatenate([vgg16_base.get_layer("block4_conv3").output, up4], axis=-1)
+        #conv4 = layers.Conv2D(128, 3, activation="relu", padding="same")(concat4)
+        #conv4 = layers.Conv2D(128, 3, activation="relu", padding="same")(conv4)
+        #up5 = layers.UpSampling2D(size=(2, 2))(conv4)
+        #concat5 = layers.concatenate([vgg16_base.get_layer("block3_conv3").output, up5], axis=-1)
+        #conv5 = layers.Conv2D(64, 3, activation="relu", padding="same")(concat5)
+        #conv5 = layers.Conv2D(64, 3, activation="relu", padding="same")(conv5)
+        ## Output layer
+        #outputs = layers.Conv2D(1, 1, activation="sigmoid")(conv5)
+        #model = tf.keras.Model(inputs=vgg16_base.input, outputs=outputs)
+        ###################################################################################
+        # Define input layer
+        inputs = Input(input_shape)    
+        # Use VGG16 as encoder (pre-trained on ImageNet)
+        base_model = VGG16(weights='imagenet', include_top=False, input_tensor=inputs)    
+        # Freeze the layers in the base model
+        for layer in base_model.layers:
+            layer.trainable = False    
+        # Decoder (upsampling path)
+        # Add upsampling layers and skip connections
+        # Note: You can customize the number of filters and kernel sizes
+        # Example architecture:
+        conv1 = layers.Conv2D(512, 3, activation='relu', padding='same')(base_model.output)
+        up1 = layers.UpSampling2D((2, 2))(conv1)
+        concat1 = layers.concatenate([base_model.get_layer('block4_pool').output, up1], axis=-1)    
+        conv2 = layers.Conv2D(256, 3, activation='relu', padding='same')(concat1)
+        up2 = layers.UpSampling2D((2, 2))(conv2)
+        concat2 = layers.concatenate([base_model.get_layer('block3_pool').output, up2], axis=-1)    
+        # Add more upsampling layers and skip connections as needed    
+        # Output layer (binary mask)
+        outputs = layers.Conv2D(1, 1, activation='sigmoid')(concat2)    
+        # Create the U-Net model
+        model = Model(inputs, outputs)
         return model
     
 if __name__ == "__main__":
@@ -217,17 +235,40 @@ if __name__ == "__main__":
         input_shape = (x_train[0].shape[0], x_train[0].shape[1], 1) 
         model = neural_net.custom_unet_model(input_shape)
     elif type_model == 2:
+        x_train = np.repeat(x_train[..., np.newaxis], 3, axis=-1)
+        x_val = np.repeat(x_val[..., np.newaxis], 3, axis=-1)
+        x_test = np.repeat(x_test[..., np.newaxis], 3, axis=-1)
+        y_train = np.repeat(y_train[..., np.newaxis], 3, axis=-1)
+        y_val = np.repeat(y_val[..., np.newaxis], 3, axis=-1)
+        y_test = np.repeat(y_test[..., np.newaxis], 3, axis=-1)
         input_shape = (x_train[0].shape[0], x_train[0].shape[1], 3) 
         model = neural_net.TL_unet_model(input_shape)
 
-    # Define a loss function suitable for image segmentation
+    # First definition of the dice coef loss func
     def dice_coefficient(y_true, y_pred):
         intersection = tf.reduce_sum(y_true * y_pred)
         union = tf.reduce_sum(y_true) + tf.reduce_sum(y_pred)
         return (2.0 * intersection + 1e-5) / (union + 1e-5)
+    
+    # Second definition of the dice coef loss func
+    def dice_coef(y_true, y_pred, smooth=1):
+        # flatten
+        y_true_f = K.flatten(y_true)
+        y_pred_f = K.flatten(y_pred)
+        # one-hot encoding y with 3 labels : 0=background, 1=label1, 2=label2
+        y_true_f = K.one_hot(K.cast(y_true_f, np.uint8), 3)
+        y_pred_f = K.one_hot(K.cast(y_pred_f, np.uint8), 3)
+        # calculate intersection and union exluding background using y[:,1:]
+        intersection = K.sum(y_true_f[:,1:]* y_pred_f[:,1:], axis=[-1])
+        union = K.sum(y_true_f[:,1:], axis=[-1]) + K.sum(y_pred_f[:,1:], axis=[-1])
+        # apply dice formula
+        dice = K.mean((2. * intersection + smooth)/(union + smooth), axis=0)
+        return dice
+    def dice_loss(y_true, y_pred):
+        return 1-dice_coef(y_true, y_pred)
 
     # Compile the model
-    model.compile(optimizer="adam", loss=dice_coefficient, metrics=["accuracy"])
+    model.compile(optimizer="adam", loss=dice_loss, metrics=["accuracy"])
 
     model.summary()
 
