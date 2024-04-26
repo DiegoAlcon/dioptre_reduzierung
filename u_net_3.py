@@ -6,6 +6,7 @@ import pandas as pd
 import cv2
 import tensorflow as tf
 from tensorflow.keras import layers
+from tensorflow.keras.applications import VGG16
 
 ##############################################################################################################################################################################
 
@@ -142,38 +143,43 @@ class Merkmalsextraktion:
 class NeuralNet:
     # Define the U-Net model
     def unet_model(self, input_shape):
-        inputs = tf.keras.Input(shape=input_shape)
-        #inputs = [tf.keras.Input(shape=input_shape) for _ in range(num_images)]
-        #inputs = layers.concatenate(inputs, axis=-1)
+        #inputs = tf.keras.Input(shape=input_shape)
 
         # Encoder (downsampling)
-        conv1 = layers.Conv2D(64, 3, activation="relu", padding="same")(inputs)
-        conv1 = layers.Conv2D(64, 3, activation="relu", padding="same")(conv1)
-        pool1 = layers.MaxPooling2D(pool_size=(2, 2))(conv1)
+        #conv1 = layers.Conv2D(64, 3, activation="relu", padding="same")(inputs)
+        #conv1 = layers.Conv2D(64, 3, activation="relu", padding="same")(conv1)
+        #pool1 = layers.MaxPooling2D(pool_size=(2, 2))(conv1)
 
-        conv2 = layers.Conv2D(128, 3, activation="relu", padding="same")(pool1)
-        conv2 = layers.Conv2D(128, 3, activation="relu", padding="same")(conv2)
-        pool2 = layers.MaxPooling2D(pool_size=(2, 2))(conv2)
+        #conv2 = layers.Conv2D(128, 3, activation="relu", padding="same")(pool1)
+        #conv2 = layers.Conv2D(128, 3, activation="relu", padding="same")(conv2)
+        #pool2 = layers.MaxPooling2D(pool_size=(2, 2))(conv2)
 
         # Middle (bottleneck)
-        conv3 = layers.Conv2D(256, 3, activation="relu", padding="same")(pool2)
-        conv3 = layers.Conv2D(256, 3, activation="relu", padding="same")(conv3)
+        #conv3 = layers.Conv2D(256, 3, activation="relu", padding="same")(pool2)
+        #conv3 = layers.Conv2D(256, 3, activation="relu", padding="same")(conv3)
+
+        vgg16_base = VGG16(weights="imagenet", include_top=False, input_shape=input_shape)
+
+        for layer in vgg16_base.layers:
+            layer.trainable = False
+
+        encoder_output = vgg16_base.get_layer("block5_conv3").output
 
         # Decoder (upsampling)
-        up4 = layers.UpSampling2D(size=(2, 2))(conv3)
-        concat4 = layers.concatenate([conv2, up4], axis=-1) # fehler
+        up4 = layers.UpSampling2D(size=(2, 2))(encoder_output)
+        concat4 = layers.concatenate([vgg16_base.get_layer("block4_conv3").output, up4], axis=-1) # fehler
         conv4 = layers.Conv2D(128, 3, activation="relu", padding="same")(concat4)
         conv4 = layers.Conv2D(128, 3, activation="relu", padding="same")(conv4)
 
         up5 = layers.UpSampling2D(size=(2, 2))(conv4)
-        concat5 = layers.concatenate([conv1, up5], axis=-1)
+        concat5 = layers.concatenate([vgg16_base.get_layer("block3_conv3").output, up5], axis=-1)
         conv5 = layers.Conv2D(64, 3, activation="relu", padding="same")(concat5)
         conv5 = layers.Conv2D(64, 3, activation="relu", padding="same")(conv5)
 
         # Output layer
         outputs = layers.Conv2D(1, 1, activation="sigmoid")(conv5)
 
-        model = tf.keras.Model(inputs, outputs)
+        model = tf.keras.Model(inputs=vgg16_base.input, outputs=outputs)
         return model
     
 ##############################################################################################################################################################################
@@ -203,7 +209,7 @@ if __name__ == "__main__":
     del images[55]
     del diopts[55]
 
-    factor = 3
+    factor = 4
     new_height = images[0].shape[0] // factor
     new_width   = images[0].shape[1] // factor
     images = [cv2.resize(img, (new_height, new_width), interpolation=cv2.INTER_AREA) for img in images]
@@ -237,18 +243,26 @@ if __name__ == "__main__":
     x_val   = np.array(x_val)
     x_test  = np.array(x_test)
 
+    x_train = np.repeat(x_train[..., np.newaxis], 3, axis=-1)
+    x_val   = np.repeat(x_val[..., np.newaxis], 3, axis=-1)
+    x_test  = np.repeat(x_test[..., np.newaxis], 3, axis=-1)
+
     x_train_masks = np.array(x_train_masks)
     x_val_masks   = np.array(x_val_masks)
     x_test_masks  = np.array(x_test_masks)
 
+    x_train_masks = np.repeat(x_train_masks[..., np.newaxis], 3, axis=-1)
+    x_val_masks   = np.repeat(x_val_masks[..., np.newaxis], 3, axis=-1)
+    x_test_masks  = np.repeat(x_test_masks[..., np.newaxis], 3, axis=-1)
+
     # Create thU-Net model
-    input_shape = (x[0].shape[0], x[0].shape[1], 1)  
+    input_shape = (x_train[0].shape[0], x_train[0].shape[1], x_train[0].shape[2])  
     #num_images  = len(x_train)
     neural_net = NeuralNet()
     model = neural_net.unet_model(input_shape)
 
     # Compile the model
-    model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+    model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
 
     model.summary()
 
