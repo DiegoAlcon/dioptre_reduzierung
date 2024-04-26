@@ -211,7 +211,7 @@ elif model_type == 2:
 
 elif model_type == 3:
 
-    degree = 20  # Change to desired degree
+    degree = 1  # Change to desired degree
     poly = PolynomialFeatures(degree)
     X_poly = poly.fit_transform(df[["bubbles", "volume"]])
 

@@ -278,6 +278,8 @@ if __name__ == "__main__":
         image_plotter = BildPlotter(x_masks) 
         image_plotter.plot_image(2) 
     
+    ####################################################################################################################
+    
     original_y = diopts
 
     y = list(filter(lambda x: -5 < x < 5, original_y))
