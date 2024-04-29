@@ -95,18 +95,25 @@ class Bildvorverarbeitung:
     
 if __name__ == "__main__":
     # Kleiner Rechner
-    image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1_18_4", 
-                       r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2_18_4", 
-                       ] 
+    #image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1_18_4", 
+    #                   r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2_18_4", 
+    #                   ] 
+    # Mittlerer Rechner
+    image_directory = [r"C:\Users\SANCHDI2\dioptre_reduzierung\Labeled1_18_4",
+                       r"C:\Users\SANCHDI2\dioptre_reduzierung\Labeled2_18_4"
+                        ]
     excel_directory = "example.xlsx"
-    image_processor = Bildvorverarbeitung(image_directory, excel_directory, target_height=4500, target_width=4500, x_offset=0, y_offset=0) 
+    image_processor = Bildvorverarbeitung(image_directory, excel_directory, target_height=4480, target_width=4480, x_offset=0, y_offset=0) 
 
     images = image_processor.images[0]
     diopts = image_processor.images[1]
 
     images = image_processor.crop_images(images)
 
-    directory = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\original\*'
+    # Klein Rechner
+    #directory = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\original\*'
+    # Mittlere Rechner
+    directory = r"C:\Users\SANCHDI2\dioptre_reduzierung\original\*"
     files = glob.glob(directory)
 
     for file in files:
@@ -116,7 +123,10 @@ if __name__ == "__main__":
     file_number = 0
     for img in images:
         file_number += 1
-        output_path = os.path.join(r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\original', f"original_{file_number}.jpg")
+        # Klein Rechner
+        #output_path = os.path.join(r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\original', f"original_{file_number}.jpg")
+        # Mittlere Rechner
+        output_path = os.path.join(r"C:\Users\SANCHDI2\dioptre_reduzierung\original", f"original_{file_number}.jpg")
         plt.imsave(output_path, img, cmap='gray', pil_kwargs={'compress_level': 0})
 
     with open("test", "wb") as fp:   

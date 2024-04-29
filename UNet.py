@@ -78,36 +78,83 @@ class Merkmalsextraktion:
 class NeuralNet:
     # Define a custom U-Net model
     def custom_unet_model(self, input_shape):
+        type_net = int(input('Enter 1 for 2-deep-2-layered, enter 2 for 2-deep-1-layered, enter 3 for less deep model: '))
         inputs = tf.keras.Input(shape=input_shape)
-        #inputs = [tf.keras.Input(shape=input_shape) for _ in range(num_images)]
-        #inputs = layers.concatenate(inputs, axis=-1)
 
-        # Encoder (downsampling)
-        conv1 = layers.Conv2D(64, 3, activation="relu", padding="same")(inputs)
-        conv1 = layers.Conv2D(64, 3, activation="relu", padding="same")(conv1)
-        pool1 = layers.MaxPooling2D(pool_size=(2, 2))(conv1)
+        if type_net == 1:
+            # Encoder (downsampling)
+            conv1 = layers.Conv2D(64, 3, activation="relu", padding="same")(inputs)
+            conv1 = layers.Conv2D(64, 3, activation="relu", padding="same")(conv1)
+            pool1 = layers.MaxPooling2D(pool_size=(2, 2))(conv1)
 
-        conv2 = layers.Conv2D(128, 3, activation="relu", padding="same")(pool1)
-        conv2 = layers.Conv2D(128, 3, activation="relu", padding="same")(conv2)
-        pool2 = layers.MaxPooling2D(pool_size=(2, 2))(conv2)
+            conv2 = layers.Conv2D(128, 3, activation="relu", padding="same")(pool1)
+            conv2 = layers.Conv2D(128, 3, activation="relu", padding="same")(conv2)
+            pool2 = layers.MaxPooling2D(pool_size=(2, 2))(conv2)
 
-        # Middle (bottleneck)
-        conv3 = layers.Conv2D(256, 3, activation="relu", padding="same")(pool2)
-        conv3 = layers.Conv2D(256, 3, activation="relu", padding="same")(conv3)
+            # Middle (bottleneck)
+            conv3 = layers.Conv2D(256, 3, activation="relu", padding="same")(pool2)
+            conv3 = layers.Conv2D(256, 3, activation="relu", padding="same")(conv3)
 
-        # Decoder (upsampling)
-        up4 = layers.UpSampling2D(size=(2, 2))(conv3)
-        concat4 = layers.concatenate([conv2, up4], axis=-1)
-        conv4 = layers.Conv2D(128, 3, activation="relu", padding="same")(concat4)
-        conv4 = layers.Conv2D(128, 3, activation="relu", padding="same")(conv4)
+            # Decoder (upsampling)
+            up4 = layers.UpSampling2D(size=(2, 2))(conv3)
+            concat4 = layers.concatenate([conv2, up4], axis=-1)
+            conv4 = layers.Conv2D(128, 3, activation="relu", padding="same")(concat4)
+            conv4 = layers.Conv2D(128, 3, activation="relu", padding="same")(conv4)
 
-        up5 = layers.UpSampling2D(size=(2, 2))(conv4)
-        concat5 = layers.concatenate([conv1, up5], axis=-1)
-        conv5 = layers.Conv2D(64, 3, activation="relu", padding="same")(concat5)
-        conv5 = layers.Conv2D(64, 3, activation="relu", padding="same")(conv5)
+            up5 = layers.UpSampling2D(size=(2, 2))(conv4)
+            concat5 = layers.concatenate([conv1, up5], axis=-1)
+            conv5 = layers.Conv2D(64, 3, activation="relu", padding="same")(concat5)
+            conv5 = layers.Conv2D(64, 3, activation="relu", padding="same")(conv5)
 
-        # Output layer
-        outputs = layers.Conv2D(1, 1, activation="sigmoid")(conv5)
+            # Output layer
+            outputs = layers.Conv2D(1, 1, activation="sigmoid")(conv5)
+
+        elif type_net == 2:
+
+            # Encoder (downsampling)
+            conv1 = layers.Conv2D(64, 3, activation="relu", padding="same")(inputs)
+            pool1 = layers.MaxPooling2D(pool_size=(2, 2))(conv1)
+
+            conv2 = layers.Conv2D(128, 3, activation="relu", padding="same")(pool1)
+            pool2 = layers.MaxPooling2D(pool_size=(2, 2))(conv2)
+
+            # Middle (bottleneck)
+            conv3 = layers.Conv2D(256, 3, activation="relu", padding="same")(pool2)
+
+            # Decoder (upsampling)
+            up4 = layers.UpSampling2D(size=(2, 2))(conv3)
+            concat4 = layers.concatenate([conv2, up4], axis=-1)
+            conv4 = layers.Conv2D(128, 3, activation="relu", padding="same")(concat4)
+
+            up5 = layers.UpSampling2D(size=(2, 2))(conv4)
+            concat5 = layers.concatenate([conv1, up5], axis=-1)
+            conv5 = layers.Conv2D(64, 3, activation="relu", padding="same")(concat5)
+
+            # Output layer
+            outputs = layers.Conv2D(1, 1, activation="sigmoid")(conv5)
+
+        elif type_net == 3:
+            # Encoder (downsampling)
+            conv1 = layers.Conv2D(32, 3, activation="relu", padding="same")(inputs)
+            pool1 = layers.MaxPooling2D(pool_size=(2, 2))(conv1)
+
+            conv2 = layers.Conv2D(64, 3, activation="relu", padding="same")(pool1)
+            pool2 = layers.MaxPooling2D(pool_size=(2, 2))(conv2)
+
+            # Middle (bottleneck)
+            conv3 = layers.Conv2D(128, 3, activation="relu", padding="same")(pool2)
+
+            # Decoder (upsampling)
+            up4 = layers.UpSampling2D(size=(2, 2))(conv3)
+            concat4 = layers.concatenate([conv2, up4], axis=-1)
+            conv4 = layers.Conv2D(64, 3, activation="relu", padding="same")(concat4)
+
+            up5 = layers.UpSampling2D(size=(2, 2))(conv4)
+            concat5 = layers.concatenate([conv1, up5], axis=-1)
+            conv5 = layers.Conv2D(32, 3, activation="relu", padding="same")(concat5)
+
+            # Output layer
+            outputs = layers.Conv2D(1, 1, activation="sigmoid")(conv5)
 
         model = tf.keras.Model(inputs, outputs)
         return model
@@ -137,35 +184,46 @@ class NeuralNet:
         inputs = Input(input_shape)    
         # Use VGG16 as encoder (pre-trained on ImageNet)
         base_model = VGG16(weights='imagenet', include_top=False, input_tensor=inputs)    
+        
         # Freeze the layers in the base model
         for layer in base_model.layers:
             layer.trainable = False    
-        # Decoder (upsampling path)
-        # Add upsampling layers and skip connections
-        # Note: You can customize the number of filters and kernel sizes
-        # Example architecture:
-        conv1 = layers.Conv2D(512, 3, activation='relu', padding='same')(base_model.output)
+
+        # Extract specific layers from VGG16 for skip connections
+        encoder_layers = ['block1_conv2', 'block2_conv2', 'block3_conv3', 'block4_conv3']
+        encoder_outputs = [base_model.get_layer(layer_name).output for layer_name in encoder_layers]
+
+        conv1 = layers.Conv2D(512, 3, activation='relu', padding='same')(encoder_outputs[-1])
         up1 = layers.UpSampling2D((2, 2))(conv1)
-        concat1 = layers.concatenate([base_model.get_layer('block4_pool').output, up1], axis=-1)    
+        concat1 = layers.concatenate([encoder_outputs[-2], up1], axis=-1)
+
         conv2 = layers.Conv2D(256, 3, activation='relu', padding='same')(concat1)
         up2 = layers.UpSampling2D((2, 2))(conv2)
-        concat2 = layers.concatenate([base_model.get_layer('block3_pool').output, up2], axis=-1)    
-        # Add more upsampling layers and skip connections as needed    
+        concat2 = layers.concatenate([encoder_outputs[-3], up2], axis=-1)
+
+        up3 = layers.UpSampling2D((2, 2))(concat2)
+        concat3 = layers.concatenate([encoder_outputs[-4], up3], axis=-1)
+
         # Output layer (binary mask)
-        outputs = layers.Conv2D(1, 1, activation='sigmoid')(concat2)    
+        outputs = layers.Conv2D(3, 1, activation='softmax')(concat3)    
         # Create the U-Net model
         model = Model(inputs, outputs)
         return model
     
 if __name__ == "__main__":
-    images_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\original'
-    masks_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\bubbles'
+    # Kleiner Rechner
+    #images_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\original'
+    #masks_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\bubbles'
+    # Mittlerer Rechner
+    images_folder = r'C:\Users\SANCHDI2\dioptre_reduzierung\original'
+    masks_folder = r'C:\Users\SANCHDI2\dioptre_reduzierung\bubbles'
+    
     images_files  = os.listdir(images_folder)
     masks_files = os.listdir(masks_folder)
 
     factor = int(input('Enter factor for downsamplig (possibe options: 10, 12, 15, 18, 20): '))
-    new_height = 4500 // factor
-    new_width = 4500 // factor
+    new_height = 4480 // factor
+    new_width = 4480 // factor
     original_height = new_height * factor
     original_width = new_width * factor
 
@@ -268,55 +326,53 @@ if __name__ == "__main__":
         return 1-dice_coef(y_true, y_pred)
 
     # Compile the model
-    model.compile(optimizer="adam", loss=dice_loss, metrics=["accuracy"])
+    model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
 
     model.summary()
 
-    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, verbose=1, restore_best_weights=True)
+    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=25, verbose=1, restore_best_weights=True)
 
     # Train the model
-    history = model.fit(x_train, y_train, epochs=10, batch_size=16, validation_data=(x_val, y_val), callbacks=[early_stopping])
-
-    # Evaluate the model on test data
-    test_loss, test_accuracy = model.evaluate(x_test, y_test)
-    print(f"Test accuracy: {test_accuracy:.4f}")
+    history = model.fit(x_train, y_train, epochs=500, batch_size=16, validation_data=(x_val, y_val), callbacks=[early_stopping])
+    #history = model.fit(x_train, y_train, epochs=500, batch_size=16, validation_data=(x_val, y_val))
 
     # Predict masks for test images
-    test_predictions = model.predict(x_test)
+    predicted_masks = model.predict(x_test)
 
-    # Color pixels predicted to belong to the object with white (255)
-    test_predictions[test_predictions >= 0.5] = 255
+    if type_model == 1:
+        # Remove the third dimension from predicted masks
+        predicted_masks = np.squeeze(predicted_masks, axis=-1)
+    elif type_model == 2:
 
-    # Count total pixels predicted to belong to the object
-    total_predicted_pixels = int((test_predictions > 0).sum())
-    print(f"Total predicted pixels: {total_predicted_pixels}")
+        def rgb_to_gray(rgb_array):
+            return np.dot(rgb_array[..., :3], [0.2989, 0.5870, 0.1140])
+    
+        predicted_masks = [rgb_to_gray(predicted_mask) for predicted_mask in predicted_masks]
+        x_test = [rgb_to_gray(x_test_single) for x_test_single in x_test]
+
+    # Create subplots
+    num_images = len(x_test)
+    rows, cols = 2, 4
+
+    fig, axs = plt.subplots(rows, cols, figsize=(15, 8))
+
+    for i in range(num_images):
+        row_idx = i // cols
+        col_idx = i % cols
+
+        # Overlay predicted mask on original image (grayscale)
+        #overlay_image = np.copy(x_test[i])
+        #overlay_image[predicted_masks[i] > 0.5] = 255  # Set mask regions to white
+
+        # Combine original image and predicted mask using bitwise AND
+        combined_image = cv2.bitwise_and(x_test[i], x_test[i], mask=(predicted_masks[i] < 0.5).astype(np.uint8))
+
+        #axs[row_idx, col_idx].imshow(overlay_image, cmap="gray")
+        axs[row_idx, col_idx].imshow(combined_image, cmap="gray")
+        axs[row_idx, col_idx].set_title(f"Image {i+1}")
+        axs[row_idx, col_idx].axis("off")
+
+    plt.tight_layout()
+    plt.show()
 
     print('Hello world')
-
-    #test_loss, test_mae = model.evaluate(X_test, Y_test)
-    #print(f"Test Loss: {test_loss:.4f}, Test MAE: {test_mae:.4f}")
-
-    #plt.plot(history.history['loss'], label='train')
-    #plt.plot(history.history['val_loss'], label='validation')  
-    #plt.xlabel('Epochs')
-    #plt.ylabel('Loss')
-    #plt.title('Training and Validation Loss Curves')
-    #plt.legend()
-    #plt.show()
-
-    # Make predictions
-    #predictions = model.predict(X_test)
-
-    #plt.scatter(Y_test, predictions, alpha=0.5)
-    #plt.plot([min(Y_test), max(Y_test)], [min(Y_test), max(Y_test)], color='r', linestyle='--', label='Ideal Line')
-    #plt.xlabel('True Values')
-    #plt.ylabel('Predictions')
-    #plt.title('Predictions vs. True Values')
-    #plt.show()
-
-    # Print the predictions
-    #print("Predictions:")
-    #for i in range(len(predictions)):
-        #print(f"Input: ({x_test_bubbles[i]}, {x_test_volume[i]}), Predicted Output: {predictions[i][0]:.2f}")
-
-    #print('Hello World')
