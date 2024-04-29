@@ -1,24 +1,24 @@
 import os
 import cv2
-import pywt
-import keras
-from keras import layers
+import tensorflow as tf
+#import pywt
+#import keras
+#from keras import layers
 import numpy as np
 import pandas as pd
 import openpyxl
-import tensorflow as tf
 #from keras.utils import to_categorical
 #from keras.callbacks import ModelCheckpoint, TensorBoard
 from sklearn.model_selection import train_test_split
-from keras.callbacks import EarlyStopping
+#from keras.callbacks import EarlyStopping
 #from keras.optimizers import Adam
 import matplotlib.pyplot as plt
 #from scipy import stats
 #from sklearn.preprocessing import MinMaxScaler
 #from decimal import Decimal
 #from keras.applications import VGG16
-from keras.layers import Input, Flatten, Dense
-from keras.models import Model
+#from keras.layers import Input, Flatten, Dense
+#from keras.models import Model
 
 
 class BildPlotter:
@@ -157,6 +157,7 @@ class BildPlotter:
             plt.show()
     
 if __name__ == "__main__":
+<<<<<<< HEAD
     # For kleiner Rechner:
     #image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1", 
     #                   r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2", 
@@ -165,6 +166,17 @@ if __name__ == "__main__":
     image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\Labeled1",
                        r"C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\Labeled2",
                        ]
+=======
+    # For the first computer
+    #image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1", 
+    #                   r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2", 
+    #                   ]  
+    # For the second computer (grössest)
+    # For the third computer (von Timo (Mittlere))
+    image_directory = [r"C:\Users\SANCHDI2\dioptre_reduzierung\Labeled1",
+                       r"C:\Users\SANCHDI2\dioptre_reduzierung\Labeled2"
+                        ]
+>>>>>>> 80f3e5e242c94c0ea758c24281122e5a63feee35
     excel_directory = "example.xlsx"
     image_processor = Bildvorverarbeitung(image_directory, excel_directory, target_height=850, target_width=850, x_offset=-225, y_offset=1250)
 
@@ -184,6 +196,7 @@ if __name__ == "__main__":
 
     images = [image / 255 for image in images]
 
+<<<<<<< HEAD
     
     #factor = 3
 
@@ -192,6 +205,8 @@ if __name__ == "__main__":
 
     #images = [cv2.resize(img, (new_height, new_width), interpolation=cv2.INTER_AREA) for img in images]
 
+=======
+>>>>>>> 80f3e5e242c94c0ea758c24281122e5a63feee35
     #image_plotter = BildPlotter(images) 
     #image_plotter.plot_image(2) # 1 soll images index werden, 2 darf es nicht
 
@@ -223,51 +238,55 @@ if __name__ == "__main__":
     y_test  = np.array(y_test)
 
     # Create a custom VGG16-like architecture
-    #input_layer = Input(shape=(850, 850, 1))
-    #x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(input_layer)
-    #x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Flatten()(x)
-    #x = tf.keras.layers.Dense(512, activation='relu')(x)
-    #x = tf.keras.layers.Dense(256, activation='relu')(x)
-    #output_layer = tf.keras.layers.Dense(1, activation='linear')(x)
-
-    #input_layer = Input(shape=(850, 850, 1))
-    #x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(input_layer)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Flatten()(x)
-    #x = tf.keras.layers.Dense(512, activation='relu')(x)
-    #output_layer = tf.keras.layers.Dense(1, activation='linear')(x)
-
-    input_layer = Input(shape=(850, 850, 1))
+    input_layer = tf.keras.Input(shape=(850, 850, 1))
     x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(input_layer)
+    x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
     x = tf.keras.layers.MaxPooling2D((2, 2))(x)
     x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.MaxPooling2D((2, 2))(x)
+    x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
     x = tf.keras.layers.MaxPooling2D((2, 2))(x)
     x = tf.keras.layers.Flatten()(x)
+    x = tf.keras.layers.Dense(512, activation='relu')(x)
     x = tf.keras.layers.Dense(256, activation='relu')(x)
     output_layer = tf.keras.layers.Dense(1, activation='linear')(x)
 
+    #input_layer = Input(shape=(850, 850, 1))
+    #x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(input_layer)
+    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
+    #x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
+    #x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
+    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
+    #x = tf.keras.layers.Flatten()(x)
+    #x = tf.keras.layers.Dense(512, activation='relu')(x)
+    #output_layer = tf.keras.layers.Dense(1, activation='linear')(x)
+
+    #input_layer = Input(shape=(850, 850, 1))
+    #x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(input_layer)
+    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
+    #x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
+    #x = tf.keras.layers.Flatten()(x)
+    #x = tf.keras.layers.Dense(256, activation='relu')(x)
+    #output_layer = tf.keras.layers.Dense(1, activation='linear')(x)
+
     # Create the model
-    model = Model(inputs=input_layer, outputs=output_layer)
+    model = tf.keras.Model(inputs=input_layer, outputs=output_layer)
 
     model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
 
     model.summary()
 
-    early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=1, restore_best_weights=True)
+    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, verbose=1, restore_best_weights=True)
 
+<<<<<<< HEAD
     history = model.fit(x_train, y_train, epochs=10, batch_size=32, validation_data=(x_val, y_val), callbacks=[early_stopping]) 
+=======
+    history = model.fit(x_train, y_train, epochs=10, batch_size=16, validation_data=(x_val, y_val), callbacks=[early_stopping]) 
+>>>>>>> 80f3e5e242c94c0ea758c24281122e5a63feee35
 
     test_loss, test_mae = model.evaluate(x_test, y_test)
     print(f"Test Loss: {test_loss:.4f}, Test MAE: {test_mae:.4f}")
