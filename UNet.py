@@ -212,11 +212,11 @@ class NeuralNet:
     
 if __name__ == "__main__":
     # Kleiner Rechner
-    #images_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\original'
-    #masks_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\bubbles'
+    images_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\original'
+    masks_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\bubbles'
     # Mittlerer Rechner
-    images_folder = r'C:\Users\SANCHDI2\dioptre_reduzierung\original'
-    masks_folder = r'C:\Users\SANCHDI2\dioptre_reduzierung\bubbles'
+    #images_folder = r'C:\Users\SANCHDI2\dioptre_reduzierung\original'
+    #masks_folder = r'C:\Users\SANCHDI2\dioptre_reduzierung\bubbles'
     
     images_files  = os.listdir(images_folder)
     masks_files = os.listdir(masks_folder)

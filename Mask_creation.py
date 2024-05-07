@@ -192,7 +192,7 @@ if __name__ == "__main__":
 
     image2mask = 1
 
-    types_of_features = int(input('Enter types of features to store data in as a separated comma list (eg. [1, 2] would reffer to 1: bubbles and 2: volume): '))
+    types_of_features = int(input('Enter types of features to store data in as a separated comma list (eg. [1, 2] would reffer to 1: bubbles and 2): '))
 
     for features in types_of_features: 
         x_masks = []
@@ -228,10 +228,10 @@ if __name__ == "__main__":
             image_plotter.plot_image(1)         
 
             if features == 1:
-                output_path = os.path.join(r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\bubbles', f"mask_{image2mask}.jpg")
+                output_path = os.path.join(r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\bubbles', f"mask_{image2mask + 1}.jpg")
                 plt.imsave(output_path, binary_mask, cmap='gray', pil_kwargs={'compress_level': 0})
             elif features == 2:
-                output_path = os.path.join(r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\volumen', f"volum_{image2mask}.jpg")
+                output_path = os.path.join(r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\volumen', f"volum_{image2mask + 1}.jpg")
                 plt.imsave(output_path, binary_mask, cmap='gray', pil_kwargs={'compress_level': 0})
 
 print('Hello world')
