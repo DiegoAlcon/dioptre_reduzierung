@@ -256,6 +256,9 @@ if __name__ == "__main__":
 
     images = [image / 255 for image in images]
 
+    #bild = BildPlotter(mask)
+    #bild.plot_image(1)
+    
     # Merkmalsextraktion
     #sharpen_image = Merkmalsextraktion(images) 
     #images = sharpen_image.unsharp_mask()
@@ -326,15 +329,23 @@ if __name__ == "__main__":
         return 1-dice_coef(y_true, y_pred)
 
     # Compile the model
-    model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+    model.compile(optimizer="adam", loss="binary_crossentropy", metrics=['mean_absolute_error', 'mean_squared_error', 'accuracy'])
 
     model.summary()
 
-    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=25, verbose=1, restore_best_weights=True)
+    #early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, verbose=1, restore_best_weights=True)
 
     # Train the model
-    history = model.fit(x_train, y_train, epochs=500, batch_size=16, validation_data=(x_val, y_val), callbacks=[early_stopping])
-    #history = model.fit(x_train, y_train, epochs=500, batch_size=16, validation_data=(x_val, y_val))
+    #history = model.fit(x_train, y_train, epochs=20, batch_size=16, validation_data=(x_val, y_val), callbacks=[early_stopping])
+    history = model.fit(x_train, y_train, epochs=20, batch_size=16, validation_data=(x_val, y_val))
+
+    plt.plot(history.history['loss'], label='train')
+    plt.plot(history.history['val_loss'], label='validation')  
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title('Training and Validation Loss Curves')
+    plt.legend()
+    plt.show()
 
     # Predict masks for test images
     predicted_masks = model.predict(x_test)
