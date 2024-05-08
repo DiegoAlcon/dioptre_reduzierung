@@ -7,6 +7,7 @@ os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import pandas as pd
 import cv2
 import tensorflow as tf
+from tensorflow import keras
 from tensorflow.keras import layers
 import pywt
 import keras
@@ -78,7 +79,7 @@ class Merkmalsextraktion:
 class NeuralNet:
     # Define a custom U-Net model
     def custom_unet_model(self, input_shape):
-        type_net = int(input('Enter 1 for 2-deep-2-layered, enter 2 for 2-deep-1-layered, enter 3 for less deep model: '))
+        type_net = int(input('Enter 1 for 2-deep-2-layered, enter 2 for 2-deep-1-layered, enter 3 for less deep model, enter 4 for Functional API: '))
         inputs = tf.keras.Input(shape=input_shape)
 
         if type_net == 1:
@@ -156,30 +157,65 @@ class NeuralNet:
             # Output layer
             outputs = layers.Conv2D(1, 1, activation="sigmoid")(conv5)
 
-        model = tf.keras.Model(inputs, outputs)
+        elif type_net == 4:
+            # Here goes the UNet defined by the Functional API Blog
+            def double_conv_block(x, n_filters):
+
+                # Conv2D then ReLU activation
+                x = layers.Conv2D(n_filters, 3, padding = "same", activation = "relu", kernel_initializer = "he_normal")(x)
+                # Conv2D then ReLU activation
+                x = layers.Conv2D(n_filters, 3, padding = "same", activation = "relu", kernel_initializer = "he_normal")(x)
+
+                return x
+            def downsample_block(x, n_filters):
+                f = double_conv_block(x, n_filters)
+                p = layers.MaxPool2D(2)(f)
+                p = layers.Dropout(0.3)(p)
+
+                return f, p
+            def upsample_block(x, conv_features, n_filters):
+                # upsample
+                x = layers.Conv2DTranspose(n_filters, 3, 2, padding="same")(x)
+                # concatenate
+                x = layers.concatenate([x, conv_features])
+                # dropout
+                x = layers.Dropout(0.3)(x)
+                # Conv2D twice with ReLU activation
+                x = double_conv_block(x, n_filters)
+
+                return x
+            
+            inputs = layers.Input(shape=input_shape)
+            # encoder: contracting path - downsample
+            # 1 - downsample
+            f1, p1 = downsample_block(inputs, 64)
+            # 2 - downsample
+            f2, p2 = downsample_block(p1, 128)
+            # 3 - downsample
+            f3, p3 = downsample_block(p2, 256)
+            # 4 - downsample
+            f4, p4 = downsample_block(p3, 512)
+
+            # 5 - bottleneck
+            bottleneck = double_conv_block(p4, 1024)
+
+            # decoder: expanding path - upsample
+            # 6 - upsample
+            u6 = upsample_block(bottleneck, f4, 512)
+            # 7 - upsample
+            u7 = upsample_block(u6, f3, 256)
+            # 8 - upsample
+            u8 = upsample_block(u7, f2, 128)
+            # 9 - upsample
+            u9 = upsample_block(u8, f1, 64)
+
+            # outputs
+            outputs = layers.Conv2D(1, 1, padding="same", activation = "softmax")(u9)
+
+        model = tf.keras.Model(inputs, outputs, name="U-Net")
         return model
     
     def TL_unet_model(self, input_shape):
-        ## Load pre-trained VGG16 model (excluding top layers)
-        #vgg16_base = VGG16(weights="imagenet", include_top=False, input_shape=input_shape)
-        ## Freeze the pre-trained layers
-        #for layer in vgg16_base.layers:
-        #    layer.trainable = False
-        ## Get the output from the last convolutional layer of VGG16
-        #encoder_output = vgg16_base.get_layer("block5_conv3").output
-        ## Decoder (upsampling)
-        #up4 = layers.UpSampling2D(size=(2, 2))(encoder_output)
-        #concat4 = layers.concatenate([vgg16_base.get_layer("block4_conv3").output, up4], axis=-1)
-        #conv4 = layers.Conv2D(128, 3, activation="relu", padding="same")(concat4)
-        #conv4 = layers.Conv2D(128, 3, activation="relu", padding="same")(conv4)
-        #up5 = layers.UpSampling2D(size=(2, 2))(conv4)
-        #concat5 = layers.concatenate([vgg16_base.get_layer("block3_conv3").output, up5], axis=-1)
-        #conv5 = layers.Conv2D(64, 3, activation="relu", padding="same")(concat5)
-        #conv5 = layers.Conv2D(64, 3, activation="relu", padding="same")(conv5)
-        ## Output layer
-        #outputs = layers.Conv2D(1, 1, activation="sigmoid")(conv5)
-        #model = tf.keras.Model(inputs=vgg16_base.input, outputs=outputs)
-        ###################################################################################
         # Define input layer
         inputs = Input(input_shape)    
         # Use VGG16 as encoder (pre-trained on ImageNet)
@@ -212,27 +248,38 @@ class NeuralNet:
     
 if __name__ == "__main__":
     # Kleiner Rechner
-    images_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\original'
-    masks_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\bubbles'
+    #images_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\original'
+    #masks_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\bubbles'
     # Mittlerer Rechner
-    #images_folder = r'C:\Users\SANCHDI2\dioptre_reduzierung\original'
-    #masks_folder = r'C:\Users\SANCHDI2\dioptre_reduzierung\bubbles'
+    images_folder = r'C:\Users\SANCHDI2\dioptre_reduzierung\original'
+    which_folder = int(input('Enter 1 for bubble masking, 2 for gesamte masking, 3 for Differenz masking: '))
+    
+    if which_folder == 1:
+        masks_folder = r'C:\Users\SANCHDI2\dioptre_reduzierung\bubbles'
+    elif which_folder == 2:
+        masks_folder = r'C:\Users\SANCHDI2\dioptre_reduzierung\volumen'
+    elif which_folder == 3:
+        masks_folder = r'C:\Users\SANCHDI2\dioptre_reduzierung\segm'
     
     images_files  = os.listdir(images_folder)
     masks_files = os.listdir(masks_folder)
 
-    factor = int(input('Enter factor for downsamplig (possibe options: 10, 12, 15, 18, 20): '))
-    new_height = 4480 // factor
-    new_width = 4480 // factor
-    original_height = new_height * factor
-    original_width = new_width * factor
+    #factor = int(input('Enter factor for downsamplig (possibe options: 10, 12, 15, 18, 20): '))
+    new_height = 128
+    new_width = 128
+    original_height = 4500
+    original_width = 4500
+    #new_height = 4500 // factor
+    #new_width = 4500 // factor
+    #original_height = new_height * factor
+    #original_width = new_width * factor
 
     with open("test", "rb") as fp:   
         diopts = pickle.load(fp)
 
     original_y = diopts
 
-    y = list(filter(lambda x: -5 < x < 5, original_y))
+    y = list(filter(lambda x: -10 < x < 0, original_y))
 
     preserved_img = [1 if x in y else 0 for x in original_y]
 
@@ -254,7 +301,31 @@ if __name__ == "__main__":
             masks.append(mask)
         img_num += 1
 
-    images = [image / 255 for image in images]
+    #images  = [image  / 255 for image  in images]
+    #images = [2 * (image - 0.5) for image in images]
+    images = [image / 127.5 - 1 for image in images] # for the two before
+    mean = np.mean(images)
+    std = np.std(images)
+    images = [(image - mean) / std for image in images]
+    images = [tf.cast(image, dtype=tf.float32) for image in images]
+
+    #masks  = [mask  / 255 for mask  in masks ]
+    #masks = [2 * (mask - 0.5) for mask in masks]
+    masks = [mask / 127.5 - 1 for mask in masks] # for the two before
+    mean = np.mean(masks)
+    std = np.std(masks)
+    masks = [(mask - mean) / std for mask in masks]
+    masks = [tf.cast(mask, dtype=tf.float32) for mask in masks] # should be defined as tf.uint8 ?
+
+    #mean = np.mean(images)
+    #std = np.std(images)
+    #images = [(image - mean) / std for image in images]
+    #images = [image / 255 for image in images]
+    #images = [2 * (image - 0.5) for image in images]
+    #x = images
+    ##y = masks
+    #bild = BildPlotter(x[0])
+    #bild.plot_image(1)
 
     #bild = BildPlotter(mask)
     #bild.plot_image(1)
@@ -329,7 +400,10 @@ if __name__ == "__main__":
         return 1-dice_coef(y_true, y_pred)
 
     # Compile the model
-    model.compile(optimizer="adam", loss="binary_crossentropy", metrics=['mean_absolute_error', 'mean_squared_error', 'accuracy'])
+    #model.compile(optimizer="adam", loss="binary_crossentropy", metrics=['mean_absolute_error', 'mean_squared_error', 'accuracy'])
+    model.compile(optimizer=tf.keras.optimizers.Adam(),
+                  loss="sparse_categorical_crossentropy",
+                  metrics=["accuracy"])
 
     model.summary()
 
@@ -362,7 +436,8 @@ if __name__ == "__main__":
         x_test = [rgb_to_gray(x_test_single) for x_test_single in x_test]
 
     # Create subplots
-    num_images = len(x_test)
+    #num_images = len(x_test)
+    num_images = 8
     rows, cols = 2, 4
 
     fig, axs = plt.subplots(rows, cols, figsize=(15, 8))
