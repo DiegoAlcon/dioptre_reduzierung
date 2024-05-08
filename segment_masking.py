@@ -1,4 +1,4 @@
-# This programs aims to be a GUI for mask creation
+# This programs aims to be a GUI for mask creation -- with augmentated capacities for selecting more than one object when masking
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -182,24 +182,23 @@ if __name__ == "__main__":
     x = images
     y = diopts
 
-    train_size = int(0.8 * len(x))
-    x_train, x_temp = x[:train_size], x[train_size:]
-    test_size = int(0.5 * len(x_temp))
-    x_val, x_test = x_temp[:test_size], x_temp[test_size:]
-
     bubbles_to_store = []
     volumen_to_store = []
+    segment_to_store = []
 
     image2mask = 1
 
-    types_of_features = int(input('Enter types of features to store data in as a separated comma list (eg. [1, 2] would reffer to 1: bubbles and 2): '))
+    features = int(input('Enter types of features to store data in as a separated comma list (eg. [1, 2] would reffer to 1: bubbles and 2: volume, 3 for vacuums '))
 
-    for features in types_of_features: 
-        x_masks = []
-        while image2mask != -1:
-            image2mask = int(input('Enter the image to maks (enter -1 to end program): '))
-            original_image = x[image2mask]
-            image = binary_mask = cv2.resize(original_image, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
+    x_masks = []
+    while image2mask != -1:
+        image2mask = int(input('Enter the image to maks (enter -1 to end program): '))
+        original_image = x[image2mask]
+        image = binary_mask = cv2.resize(original_image, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
+
+        binary_mask = np.zeros_like(image, dtype=np.uint8)
+        do_again = 1
+        while do_again == 1:
             by_instance = Masking()
             fig, ax = plt.subplots()
             ax.imshow(image, cmap='gray')
@@ -207,31 +206,36 @@ if __name__ == "__main__":
             plt.show()
             expanded_x, expanded_y = by_instance.expand_coords()
 
-            binary_mask = np.zeros_like(image, dtype=np.uint8)
+            do_again = int(input('Do again? 1:Yes, 0:No'))
+
             for cols in range(image.shape[0]):
                 for rows in range(image.shape[1]):
                     is_inside = by_instance.cauchy_argument_principle(expanded_x, expanded_y, rows, cols)
-                    print(is_inside)
                     if is_inside:
                         binary_mask[cols, rows] = 1
 
-            x_masks.append(binary_mask)  
+        x_masks.append(binary_mask)  
 
-            binary_mask = cv2.resize(binary_mask, (original_width, original_height), interpolation=cv2.INTER_LINEAR)
-            if features == 1:
-                bubbles_to_store.append(binary_mask)
-            elif features == 2:   
-                volumen_to_store.append(binary_mask)
+        binary_mask = cv2.resize(binary_mask, (original_width, original_height), interpolation=cv2.INTER_LINEAR)
+        if features == 1:
+            bubbles_to_store.append(binary_mask)
+        elif features == 2:   
+            volumen_to_store.append(binary_mask)
+        elif features == 3:
+            segment_to_store.append(binary_mask)
 
-            result = cv2.bitwise_and(original_image, original_image, mask=binary_mask)
-            image_plotter = BildPlotter(result) 
-            image_plotter.plot_image(1)         
+        result = cv2.bitwise_and(original_image, original_image, mask=binary_mask)
+        image_plotter = BildPlotter(result) 
+        image_plotter.plot_image(1)         
 
-            if features == 1:
-                output_path = os.path.join(r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\bubbles', f"mask_{image2mask + 1}.jpg")
-                plt.imsave(output_path, binary_mask, cmap='gray', pil_kwargs={'compress_level': 0})
-            elif features == 2:
-                output_path = os.path.join(r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\volumen', f"volum_{image2mask + 1}.jpg")
-                plt.imsave(output_path, binary_mask, cmap='gray', pil_kwargs={'compress_level': 0})
+        if features == 1:
+            output_path = os.path.join(r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\bubbles', f"mask_{image2mask + 1}.jpg")
+            plt.imsave(output_path, binary_mask, cmap='gray', pil_kwargs={'compress_level': 0})
+        elif features == 2:
+            output_path = os.path.join(r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\volumen', f"volum_{image2mask + 1}.jpg")
+            plt.imsave(output_path, binary_mask, cmap='gray', pil_kwargs={'compress_level': 0})
+        elif features == 3:
+            output_path = os.path.join(r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\segm', f"segm_{image2mask + 1}.jpg")
+            plt.imsave(output_path, binary_mask, cmap='gray', pil_kwargs={'compress_level': 0})
 
 print('Hello world')

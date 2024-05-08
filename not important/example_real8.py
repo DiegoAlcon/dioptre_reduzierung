@@ -6,7 +6,6 @@ import tensorflow as tf
 #from keras import layers
 import numpy as np
 import pandas as pd
-import openpyxl
 #from keras.utils import to_categorical
 #from keras.callbacks import ModelCheckpoint, TensorBoard
 from sklearn.model_selection import train_test_split
@@ -17,7 +16,7 @@ import matplotlib.pyplot as plt
 #from sklearn.preprocessing import MinMaxScaler
 #from decimal import Decimal
 #from keras.applications import VGG16
-#from keras.layers import Input, Flatten, Dense
+from keras.layers import Input, Flatten, Dense
 #from keras.models import Model
 
 
@@ -198,12 +197,12 @@ if __name__ == "__main__":
     #image_plotter = BildPlotter(images) 
     #image_plotter.plot_image(2) # 1 soll images index werden, 2 darf es nicht
 
-    #factor = 3
+    factor = 4
 
-    #new_height = images[0].shape[0] // factor
-    #new_width   = images[0].shape[1] // factor
+    new_height = images[0].shape[0] // factor
+    new_width   = images[0].shape[1] // factor
 
-    #images = [cv2.resize(img, (new_height, new_width), interpolation=cv2.INTER_AREA) for img in images]
+    images = [cv2.resize(img, (new_height, new_width), interpolation=cv2.INTER_AREA) for img in images]
 
     #image_plotter = BildPlotter(images) 
     #image_plotter.plot_image(2) # 1 soll images index werden, 2 darf es nicht
@@ -225,41 +224,45 @@ if __name__ == "__main__":
     y_val   = np.array(y_val)
     y_test  = np.array(y_test)
 
-    # Create a custom VGG16-like architecture
-    input_layer = tf.keras.Input(shape=(850, 850, 1))
-    x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(input_layer)
-    x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
-    x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
-    x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
-    x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    x = tf.keras.layers.Flatten()(x)
-    x = tf.keras.layers.Dense(512, activation='relu')(x)
-    x = tf.keras.layers.Dense(256, activation='relu')(x)
-    output_layer = tf.keras.layers.Dense(1, activation='linear')(x)
+    model_zu_nutzen = 2
 
-    #input_layer = Input(shape=(850, 850, 1))
-    #x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(input_layer)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Flatten()(x)
-    #x = tf.keras.layers.Dense(512, activation='relu')(x)
-    #output_layer = tf.keras.layers.Dense(1, activation='linear')(x)
+    if model_zu_nutzen == 1:
+        input_layer = tf.keras.Input(shape=(x_train.shape[1], x_train.shape[2], 1))
+        x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(input_layer)
+        x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
+        x = tf.keras.layers.MaxPooling2D((2, 2))(x)
+        x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+        x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+        x = tf.keras.layers.MaxPooling2D((2, 2))(x)
+        x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
+        x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
+        x = tf.keras.layers.MaxPooling2D((2, 2))(x)
+        x = tf.keras.layers.Flatten()(x)
+        x = tf.keras.layers.Dense(512, activation='relu')(x)
+        x = tf.keras.layers.Dense(256, activation='relu')(x)
+        output_layer = tf.keras.layers.Dense(1, activation='linear')(x)
 
-    #input_layer = Input(shape=(850, 850, 1))
-    #x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(input_layer)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    #x = tf.keras.layers.MaxPooling2D((2, 2))(x)
-    #x = tf.keras.layers.Flatten()(x)
-    #x = tf.keras.layers.Dense(256, activation='relu')(x)
-    #output_layer = tf.keras.layers.Dense(1, activation='linear')(x)
+    elif model_zu_nutzen == 2:
+        input_layer = Input(shape=(x_train.shape[1], x_train.shape[2], 1))
+        x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(input_layer)
+        x = tf.keras.layers.MaxPooling2D((2, 2))(x)
+        x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+        x = tf.keras.layers.MaxPooling2D((2, 2))(x)
+        x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
+        x = tf.keras.layers.MaxPooling2D((2, 2))(x)
+        x = tf.keras.layers.Flatten()(x)
+        x = tf.keras.layers.Dense(512, activation='relu')(x)
+        output_layer = tf.keras.layers.Dense(1, activation='linear')(x)
+
+    elif model_zu_nutzen == 3:
+        input_layer = Input(shape=(x_train.shape[1], x_train.shape[2], 1))
+        x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(input_layer)
+        x = tf.keras.layers.MaxPooling2D((2, 2))(x)
+        x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+        x = tf.keras.layers.MaxPooling2D((2, 2))(x)
+        x = tf.keras.layers.Flatten()(x)
+        x = tf.keras.layers.Dense(256, activation='relu')(x)
+        output_layer = tf.keras.layers.Dense(1, activation='linear')(x)
 
     # Create the model
     model = tf.keras.Model(inputs=input_layer, outputs=output_layer)

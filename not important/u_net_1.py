@@ -161,7 +161,7 @@ class NeuralNet:
 
         # Decoder (upsampling)
         up4 = layers.UpSampling2D(size=(2, 2))(conv3)
-        concat4 = layers.concatenate([conv2, up4], axis=-1)
+        concat4 = layers.concatenate([conv2, up4], axis=-1) # fehler
         conv4 = layers.Conv2D(128, 3, activation="relu", padding="same")(concat4)
         conv4 = layers.Conv2D(128, 3, activation="relu", padding="same")(conv4)
 
@@ -207,6 +207,11 @@ if __name__ == "__main__":
     del images[55]
     del diopts[55]
 
+    factor = 3
+    new_height = images[0].shape[0] // factor
+    new_width   = images[0].shape[1] // factor
+    images = [cv2.resize(img, (new_height, new_width), interpolation=cv2.INTER_AREA) for img in images]
+
     x = images
     y = diopts
 
@@ -226,6 +231,11 @@ if __name__ == "__main__":
             img_array = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
             if img_array is not None:
                 x_masks.append(img_array)
+
+    new_height_masks = x_masks[0].shape[0] // factor
+    new_width_masks   = x_masks[0].shape[1] // factor
+    x_masks = [cv2.resize(mask, (new_height_masks, new_width_masks), interpolation=cv2.INTER_AREA) for mask in x_masks]
+
     x_train_masks = x_masks[:69]
     x_val_masks   = x_masks[69:78]
     x_test_masks  = x_masks[78:]

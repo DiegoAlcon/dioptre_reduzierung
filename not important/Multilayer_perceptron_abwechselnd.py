@@ -63,8 +63,6 @@ original_y = diopts
 y = list(filter(lambda x: -10 < x < 0, original_y))
 
 preserved_img = [1 if x in y else 0 for x in original_y]
-#y = (y - np.mean(y)) / np.std(y) # Normalization
-#y = (y - np.min(y))/(np.max(y) - np.min(y))
 
 img_num = 0
 bubble_mask_images = []
@@ -141,20 +139,20 @@ y_train_dioptre, y_temp_dioptre = y[:train_size_dioptre], y[train_size_dioptre:]
 test_size_dioptre = int(0.5 * len(y_temp_dioptre))
 y_val_dioptre, y_test_dioptre = y_temp_dioptre[:test_size_dioptre], y_temp_dioptre[test_size_dioptre:]
 
-X_train = np.array([x_train_bubbles, x_train_volume, x_train_segmen]).T
+X_train = np.array([x_train_bubbles, x_train_segmen]).T # ABWECHSELND
 Y_train = np.array(y_train_dioptre).reshape(-1, 1)
 
-X_val   = np.array([x_val_bubbles, x_val_volume, x_val_segmen]).T
+X_val   = np.array([x_val_bubbles, x_val_segmen]).T # ABWECHSELND
 Y_val   = np.array(y_val_dioptre).reshape(-1, 1)
 
-X_test   = np.array([x_test_bubbles, x_test_volume, x_test_segmen]).T # Diese wurde gewechselt
+X_test   = np.array([x_test_bubbles, x_test_segmen]).T # ABWECHSELND
 Y_test   = np.array(y_test_dioptre).reshape(-1, 1)
 #X_test   = np.array([x_abs_size_bubbles, x_abs_size_volume, x_abs_size_segmen]).T
 #Y_test   = np.array(y).reshape(-1, 1)
 
 # Define an even more robust neural network model with additional techniques
 model = tf.keras.Sequential([
-    tf.keras.layers.Dense(units=512, activation='relu', input_shape=(3,)),
+    tf.keras.layers.Dense(units=512, activation='relu', input_shape=(2,)), # ABWECHSELND
     tf.keras.layers.Dropout(0.2),  # Add dropout layer for regularization
     tf.keras.layers.Dense(units=256, activation='relu'),
     tf.keras.layers.BatchNormalization(),  # Add batch normalization layer

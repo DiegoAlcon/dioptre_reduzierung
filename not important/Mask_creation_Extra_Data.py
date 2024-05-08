@@ -5,6 +5,7 @@ import numpy as np
 import os
 import pandas as pd
 import cv2
+import re
 
 class BildPlotter:
     def __init__(self, images):
@@ -162,25 +163,33 @@ class Masking():
 
 if __name__ == "__main__":
     # Kleiner Rechner
-    image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1_18_4", 
-                       r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2_18_4", 
-                       ] 
-    excel_directory = "example.xlsx"
-    image_processor = Bildvorverarbeitung(image_directory, excel_directory, target_height=4500, target_width=4500, x_offset=0, y_offset=0) 
+    #image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1_18_4", 
+    #                   r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2_18_4", 
+    #                   ] 
+    directory = r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\original"
+    filenames = os.listdir(directory)
+    r = re.compile(r'\d+')
+    filenames.sort(key=lambda x: int(r.search(x).group()))
+    images = []
+    for filename in filenames:
+        images.append(cv2.imread(os.path.join(directory, filename), cv2.IMREAD_GRAYSCALE))
 
-    images = image_processor.images[0]
-    diopts = image_processor.images[1]
+    #excel_directory = "example.xlsx"
+    #image_processor = Bildvorverarbeitung(image_directory, excel_directory, target_height=4500, target_width=4500, x_offset=0, y_offset=0) 
 
-    images = image_processor.crop_images(images)
+    #images = image_processor.images[0]
+    #diopts = image_processor.images[1]
+
+    #images = image_processor.crop_images(images)
 
     factor = int(input('Enter factor for downsamplig (possibe options: 10, 12, 15, 18, 20): '))
     new_height = images[0].shape[0] // factor
     new_width = images[0].shape[1] // factor
-    original_height = new_height * factor
-    original_width = new_width * factor
+    original_height = 4500
+    original_width = 4500
 
     x = images
-    y = diopts
+    #y = diopts
 
     train_size = int(0.8 * len(x))
     x_train, x_temp = x[:train_size], x[train_size:]
@@ -192,9 +201,9 @@ if __name__ == "__main__":
 
     image2mask = 1
 
-    types_of_features = int(input('Enter types of features to store data in as a separated comma list (eg. [1, 2] would reffer to 1: bubbles and 2): '))
+    #types_of_features = int(input('Enter types of features to store data in as a separated comma list (eg. [1, 2] would reffer to 1: bubbles and 2: volume): '))
 
-    for features in types_of_features: 
+    for features in [1, 2]: 
         x_masks = []
         while image2mask != -1:
             image2mask = int(input('Enter the image to maks (enter -1 to end program): '))
@@ -211,7 +220,7 @@ if __name__ == "__main__":
             for cols in range(image.shape[0]):
                 for rows in range(image.shape[1]):
                     is_inside = by_instance.cauchy_argument_principle(expanded_x, expanded_y, rows, cols)
-                    print(is_inside)
+                    #print(is_inside)
                     if is_inside:
                         binary_mask[cols, rows] = 1
 

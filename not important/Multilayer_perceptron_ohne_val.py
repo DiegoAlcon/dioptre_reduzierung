@@ -9,31 +9,6 @@ import pickle
 from keras.callbacks import EarlyStopping
 import re
 
-class BildPlotter:
-    def __init__(self, images):
-        self.images = images
-
-    def plot_image(self, option):
-        if option == 1:
-            fig, ax = plt.subplots()
-            ax.imshow(self.images, cmap='gray')
-            ax.set_xlabel('X-axis')
-            ax.set_ylabel('Y-axis')
-            ax.set_title('Sample Image')
-            plt.show()
-        elif option == 2:
-            fig, axs = plt.subplots(8, 12, figsize=(15, 15))
-
-            for i in range(8):
-                for j in range(12):
-                    index = i * 12 + j
-                    if index < len(self.images):
-                        axs[i, j].imshow(self.images[index], cmap='gray')
-                        axs[i, j].axis("off") 
-
-            plt.subplots_adjust(wspace=0.05, hspace=0.05)
-            plt.show()
-
 # Define the paths to the original images folder and the masks folder
 bubble_masks_folder    = r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\bubbles"
 volume_masks_folder    = r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\volumen"
@@ -122,35 +97,22 @@ for mask in segmen_mask_images:
     x_abs_size_segmen.append(abs_size)
 
 train_size_bubbles = int(0.8 * len(x_abs_size_bubbles))
-x_train_bubbles, x_temp_bubbles = x_abs_size_bubbles[:train_size_bubbles], x_abs_size_bubbles[train_size_bubbles:]
-test_size_bubbles = int(0.5 * len(x_temp_bubbles))
-x_val_bubbles, x_test_bubbles = x_temp_bubbles[:test_size_bubbles], x_temp_bubbles[test_size_bubbles:]
+x_train_bubbles, x_test_bubbles = x_abs_size_bubbles[:train_size_bubbles], x_abs_size_bubbles[train_size_bubbles:]
 
 train_size_volume = int(0.8 * len(x_abs_size_volume))
-x_train_volume, x_temp_volume = x_abs_size_volume[:train_size_volume], x_abs_size_volume[train_size_volume:]
-test_size_volume = int(0.5 * len(x_temp_volume))
-x_val_volume, x_test_volume = x_temp_volume[:test_size_volume], x_temp_volume[test_size_volume:]
+x_train_volume, x_test_volume = x_abs_size_volume[:train_size_volume], x_abs_size_volume[train_size_volume:]
 
 train_size_segmen = int(0.8 * len(x_abs_size_segmen))
-x_train_segmen, x_temp_segmen = x_abs_size_segmen[:train_size_segmen], x_abs_size_segmen[train_size_segmen:]
-test_size_segmen = int(0.5 * len(x_temp_segmen))
-x_val_segmen, x_test_segmen = x_temp_segmen[:test_size_segmen], x_temp_segmen[test_size_segmen:]
+x_train_segmen, x_test_segmen = x_abs_size_segmen[:train_size_segmen], x_abs_size_segmen[train_size_segmen:]
 
 train_size_dioptre = int(0.8 * len(y))
-y_train_dioptre, y_temp_dioptre = y[:train_size_dioptre], y[train_size_dioptre:]
-test_size_dioptre = int(0.5 * len(y_temp_dioptre))
-y_val_dioptre, y_test_dioptre = y_temp_dioptre[:test_size_dioptre], y_temp_dioptre[test_size_dioptre:]
+y_train_dioptre, y_test_dioptre = y[:train_size_dioptre], y[train_size_dioptre:]
 
 X_train = np.array([x_train_bubbles, x_train_volume, x_train_segmen]).T
 Y_train = np.array(y_train_dioptre).reshape(-1, 1)
 
-X_val   = np.array([x_val_bubbles, x_val_volume, x_val_segmen]).T
-Y_val   = np.array(y_val_dioptre).reshape(-1, 1)
-
 X_test   = np.array([x_test_bubbles, x_test_volume, x_test_segmen]).T # Diese wurde gewechselt
 Y_test   = np.array(y_test_dioptre).reshape(-1, 1)
-#X_test   = np.array([x_abs_size_bubbles, x_abs_size_volume, x_abs_size_segmen]).T
-#Y_test   = np.array(y).reshape(-1, 1)
 
 # Define an even more robust neural network model with additional techniques
 model = tf.keras.Sequential([
@@ -166,23 +128,24 @@ model = tf.keras.Sequential([
 ])
 
 # Compile the model
+#model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
 model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mean_absolute_error', 'mean_squared_error'])
 
 model.summary()
 
-early_stopping = EarlyStopping(monitor='val_loss', patience=50, verbose=1, restore_best_weights=True)
+#early_stopping = EarlyStopping(monitor='val_loss', patience=50, verbose=1, restore_best_weights=True)
 
 # Train the model
-history = model.fit(X_train, Y_train, epochs=300, batch_size=16, validation_data=(X_val, Y_val), callbacks=[early_stopping]) 
+history = model.fit(X_train, Y_train, epochs=10000, batch_size=16) 
 
 #test_loss, test_mae = model.evaluate(X_test, Y_test)
 #print(f"Test Loss: {test_loss:.4f}, Test MAE: {test_mae:.4f}")
 
 plt.plot(history.history['loss'], label='train')
-plt.plot(history.history['val_loss'], label='validation')  
+#plt.plot(history.history['val_loss'], label='validation')  
 plt.xlabel('Epochs')
 plt.ylabel('Loss')
-plt.title('Training and Validation Loss Curves')
+plt.title('Training Loss Curve')
 plt.legend()
 plt.show()
 
