@@ -213,7 +213,13 @@ class NeuralNet:
 if __name__ == "__main__":
     # Kleiner Rechner
     images_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\original'
-    masks_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\bubbles'
+    which_folder = int(input('Enter 1 for bubbles masking, 2 for Gesamte masking, 3 for Difference masking: '))
+    if which_folder == 1:
+        masks_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\bubbles'
+    elif which_folder == 2:
+        masks_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\volumen'
+    elif which_folder == 3:
+        masks_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\segm'
     # Mittlerer Rechner
     #images_folder = r'C:\Users\SANCHDI2\dioptre_reduzierung\original'
     #masks_folder = r'C:\Users\SANCHDI2\dioptre_reduzierung\bubbles'
@@ -222,8 +228,8 @@ if __name__ == "__main__":
     masks_files = os.listdir(masks_folder)
 
     factor = int(input('Enter factor for downsamplig (possibe options: 10, 12, 15, 18, 20): '))
-    new_height = 4480 // factor
-    new_width = 4480 // factor
+    new_height = 4500 // factor
+    new_width = 4500 // factor
     original_height = new_height * factor
     original_width = new_width * factor
 
@@ -232,7 +238,7 @@ if __name__ == "__main__":
 
     original_y = diopts
 
-    y = list(filter(lambda x: -5 < x < 5, original_y))
+    y = list(filter(lambda x: -10 < x < 0, original_y))
 
     preserved_img = [1 if x in y else 0 for x in original_y]
 
@@ -337,7 +343,7 @@ if __name__ == "__main__":
 
     # Train the model
     #history = model.fit(x_train, y_train, epochs=20, batch_size=16, validation_data=(x_val, y_val), callbacks=[early_stopping])
-    history = model.fit(x_train, y_train, epochs=20, batch_size=16, validation_data=(x_val, y_val))
+    history = model.fit(x_train, y_train, epochs=30, batch_size=16, validation_data=(x_val, y_val))
 
     plt.plot(history.history['loss'], label='train')
     plt.plot(history.history['val_loss'], label='validation')  

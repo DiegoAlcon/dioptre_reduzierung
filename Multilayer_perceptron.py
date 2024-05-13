@@ -121,6 +121,26 @@ for mask in segmen_mask_images:
         abs_size += row_sum
     x_abs_size_segmen.append(abs_size)
 
+###############################################
+# The following is just momentairly and attempts to compute the correlation among blasen, gesamte, differenz to dioptreänderung
+#import pandas as pd
+#import seaborn as sns
+#df = pd.DataFrame({
+#    'bubbles': x_abs_size_bubbles,
+#    'gesamte': x_abs_size_volume,
+#    'differenz': x_abs_size_segmen,
+#    'y': y
+#})
+#matrix = df.corr()
+
+# Create a heatmap
+#plt.figure(figsize=(10, 8))
+#sns.heatmap(matrix, annot=True, cmap='coolwarm', vmin=-1, vmax=1)
+#plt.title("Correlation Matrix")
+#plt.show()
+
+###############################################
+
 train_size_bubbles = int(0.8 * len(x_abs_size_bubbles))
 x_train_bubbles, x_temp_bubbles = x_abs_size_bubbles[:train_size_bubbles], x_abs_size_bubbles[train_size_bubbles:]
 test_size_bubbles = int(0.5 * len(x_temp_bubbles))
