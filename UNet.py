@@ -249,29 +249,34 @@ class NeuralNet:
     
 if __name__ == "__main__":
     # Kleiner Rechner
-    #images_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\original'
-    #masks_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\bubbles'
-    
+    images_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\original'
+    which_folder  = int(input('Enter 1 for bubble masking, 2 for gesamte masking, 3 for Differenz masking: '))
+    if which_folder == 1:
+        masks_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\bubbles'
+    elif which_folder == 2:
+        masks_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\volumen'
+    elif which_folder == 3:
+        masks_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\segm'
+
     # Mittlerer Rechner
     #images_folder = r'C:\Users\SANCHDI2\dioptre_reduzierung\original'
-    #which_folder = int(input('Enter 1 for bubble masking, 2 for gesamte masking, 3 for Differenz masking: '))
-    
+    #which_folder = int(input('Enter 1 for bubble masking, 2 for gesamte masking, 3 for Differenz masking: '))   
     #if which_folder == 1:
-    #    masks_folder = r'C:\Users\SANCHDI2\dioptre_reduzierung\bubbles' received a label value of 13
+    #    masks_folder = r'C:\Users\SANCHDI2\dioptre_reduzierung\bubbles' 
     #elif which_folder == 2:
     #    masks_folder = r'C:\Users\SANCHDI2\dioptre_reduzierung\volumen'
     #elif which_folder == 3:
-    #    masks_folder = r'C:\Users\SANCHDI2\dioptre_reduzierung\segm' received a label value of 7
+    #    masks_folder = r'C:\Users\SANCHDI2\dioptre_reduzierung\segm' 
+
     # Grösster Rechner
-    images_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\original'
-    which_folder = int(input('Enter 1 for bubble masking, 2 for gesamte masking, 3 for Differenz masking: '))
-    
-    if which_folder == 1:
-        masks_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\bubbles'
-    elif which_folder == 2:
-        masks_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\volumen'
-    elif which_folder == 3:
-        masks_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\segm'
+    #images_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\original'
+    #which_folder = int(input('Enter 1 for bubble masking, 2 for gesamte masking, 3 for Differenz masking: '))  
+    #if which_folder == 1:
+    #    masks_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\bubbles'
+    #elif which_folder == 2:
+    #    masks_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\volumen'
+    #elif which_folder == 3:
+    #    masks_folder = r'C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\segm'
     
     images_files  = os.listdir(images_folder)
     masks_files = os.listdir(masks_folder)
