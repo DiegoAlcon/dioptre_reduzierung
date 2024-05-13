@@ -184,9 +184,13 @@ if __name__ == "__main__":
     #                   r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2", 
     #                   ]  
     # Mittlere Rechner
-    image_directory = [r"C:\Users\SANCHDI2\dioptre_reduzierung\Labeled1",
-                       r"C:\Users\SANCHDI2\dioptre_reduzierung\Labeled2"
-                        ]
+    #image_directory = [r"C:\Users\SANCHDI2\dioptre_reduzierung\Labeled1",
+    #                   r"C:\Users\SANCHDI2\dioptre_reduzierung\Labeled2"
+    #                    ]
+     # For riesiger Rechner:
+    image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\Labeled1",
+                       r"C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\Labeled2",
+                       ]
     excel_directory = "example.xlsx"
     image_processor = Bildvorverarbeitung(image_directory, excel_directory, target_height=900, target_width=900, x_offset=-225, y_offset=1250)
 
@@ -216,7 +220,10 @@ if __name__ == "__main__":
     test_size = int(0.5 * len(x_temp))
     x_val, x_test = x_temp[:test_size], x_temp[test_size:]
 
-    folder_path = r"C:\Users\SANCHDI2\dioptre_reduzierung\masks"
+   # Mittlere Rechner
+   #folder_path = r"C:\Users\SANCHDI2\dioptre_reduzierung\masks"
+   # Riesiger Rechner
+    folder_path = r"C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\masks"
     x_masks = []
     for filename in os.listdir(folder_path):
         if filename.lower().endswith(".jpg"):

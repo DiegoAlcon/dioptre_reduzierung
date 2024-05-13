@@ -157,9 +157,14 @@ class BildPlotter:
             plt.show()
     
 if __name__ == "__main__":
-    image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1", 
-                       r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2", 
-                       ]  
+    # For kleiner Rechner:
+    #image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1", 
+    #                   r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2", 
+    #                   ]  
+    # For riesiger Rechner:
+    image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\Labeled1",
+                       r"C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\Labeled2",
+                       ]
     excel_directory = "example.xlsx"
     image_processor = Bildvorverarbeitung(image_directory, excel_directory, target_height=850, target_width=850, x_offset=-225, y_offset=1250)
 
@@ -168,8 +173,10 @@ if __name__ == "__main__":
 
     images = image_processor.crop_images(images)
 
-    #sharpen_image = Merkmalsextraktion(images) 
-    #images = sharpen_image.unsharp_mask()
+    sharpen_image = Merkmalsextraktion(images) 
+    images = sharpen_image.unsharp_mask()
+
+    images = [image / 255 for image in images]
 
     #highpass_image = Merkmalsextraktion(images)
     #images = highpass_image.highpass_sharpen()

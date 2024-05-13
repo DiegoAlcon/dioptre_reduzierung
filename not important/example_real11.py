@@ -156,8 +156,13 @@ class BildPlotter:
             plt.show()
     
 if __name__ == "__main__":
-    image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1", 
-                       r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2", 
+    # For kleiner Rechner:
+    #image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1", 
+    #                   r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2", 
+    #                   ]  
+    # For riesiger Rechner:
+    image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\Labeled1",
+                       r"C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\Labeled2",
                        ]  
     excel_directory = "example.xlsx"
     image_processor = Bildvorverarbeitung(image_directory, excel_directory, target_height=850, target_width=850, x_offset=-225, y_offset=1250)
@@ -200,14 +205,14 @@ if __name__ == "__main__":
     for image, value in zip(x, y):
         
         rotated_90 = rotate_image(image, 90)
-        #rotated_180 = rotate_image(image, 180)
-        #rotated_270 = rotate_image(image, 270)
+        rotated_180 = rotate_image(image, 180)
+        rotated_270 = rotate_image(image, 270)
     
-        #x_augmented.extend([rotated_90, rotated_180, rotated_270])
-        #y_augmented.extend([value, value, value])
+        x_augmented.extend([rotated_90, rotated_180, rotated_270])
+        y_augmented.extend([value, value, value])
 
-        x_augmented.extend([rotated_90])
-        y_augmented.extend([value])
+        #x_augmented.extend([rotated_90])
+        #y_augmented.extend([value])
 
     x_combined = x + x_augmented
     y_combined = y + y_augmented

@@ -144,6 +144,16 @@ class Merkmalsextraktion:
         return canny_images
     
 if __name__ == "__main__":
+<<<<<<< HEAD
+    # For kleiner Rechner:
+    #image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1", 
+    #                   r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2", 
+    #                   ]  
+    # For riesiger Rechner:
+    image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\Labeled1",
+                       r"C:\Users\SANCHDI2\OneDrive - Alcon\Desktop\Blasenentfernung\dioptre_reduzierung\Labeled2",
+                       ]
+=======
     # For the first computer
     #image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1", 
     #                   r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2", 
@@ -153,6 +163,7 @@ if __name__ == "__main__":
     image_directory = [r"C:\Users\SANCHDI2\dioptre_reduzierung\Labeled1",
                        r"C:\Users\SANCHDI2\dioptre_reduzierung\Labeled2"
                         ]
+>>>>>>> 80f3e5e242c94c0ea758c24281122e5a63feee35
     excel_directory = "example.xlsx"
     image_processor = Bildvorverarbeitung(image_directory, excel_directory, target_height=1000, target_width=1000, x_offset=-225, y_offset=1250) # 850 850
 
@@ -172,6 +183,17 @@ if __name__ == "__main__":
 
     #images = [image / 255 for image in images]
 
+<<<<<<< HEAD
+    
+    #factor = 3
+
+    #new_height = images[0].shape[0] // factor
+    #new_width   = images[0].shape[1] // factor
+
+    #images = [cv2.resize(img, (new_height, new_width), interpolation=cv2.INTER_AREA) for img in images]
+
+=======
+>>>>>>> 80f3e5e242c94c0ea758c24281122e5a63feee35
     #image_plotter = BildPlotter(images) 
     #image_plotter.plot_image(2) # 1 soll images index werden, 2 darf es nicht
 
@@ -251,7 +273,11 @@ if __name__ == "__main__":
 
     early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, verbose=1, restore_best_weights=True)
 
+<<<<<<< HEAD
+    history = model.fit(x_train, y_train, epochs=10, batch_size=32, validation_data=(x_val, y_val), callbacks=[early_stopping]) 
+=======
     history = model.fit(x_train, y_train, epochs=10, batch_size=16, validation_data=(x_val, y_val), callbacks=[early_stopping]) 
+>>>>>>> 80f3e5e242c94c0ea758c24281122e5a63feee35
 
     test_loss, test_mae = model.evaluate(x_test, y_test)
     print(f"Test Loss: {test_loss:.4f}, Test MAE: {test_mae:.4f}")
