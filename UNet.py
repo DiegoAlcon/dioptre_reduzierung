@@ -286,10 +286,8 @@ if __name__ == "__main__":
     #new_width = 4480 // factor
     #original_height = new_height * factor
     #original_width = new_width * factor
-    new_height = 128
-    new_width = 128
-    original_height = 4500
-    original_width = 4500
+    new_height = 512
+    new_width = 512
 
     with open("test", "rb") as fp:   
         diopts = pickle.load(fp)
@@ -432,7 +430,7 @@ if __name__ == "__main__":
 
     # Train the model
     #history = model.fit(x_train, y_train, epochs=20, batch_size=16, validation_data=(x_val, y_val), callbacks=[early_stopping])
-    history = model.fit(x_train, y_train, epochs=30, batch_size=16, validation_data=(x_val, y_val))
+    history = model.fit(x_train, y_train, epochs=100, batch_size=16, validation_data=(x_val, y_val))
 
     plt.plot(history.history['loss'], label='train')
     plt.plot(history.history['val_loss'], label='validation')  
@@ -489,5 +487,7 @@ if __name__ == "__main__":
 
     plt.tight_layout()
     plt.show()
+
+    model.save("UNet_bubbles512")
 
     print('Hello world')
