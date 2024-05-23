@@ -158,14 +158,14 @@ elif whal == 0:
     # Define an even more robust neural network model with additional techniques
     model = tf.keras.Sequential([
         tf.keras.layers.Dense(units=512, activation='relu', input_shape=(2,)),
-        tf.keras.layers.Dropout(0.2),  # Add dropout layer for regularization
+        tf.keras.layers.Dropout(0.2),  
         tf.keras.layers.Dense(units=256, activation='relu'),
-        tf.keras.layers.BatchNormalization(),  # Add batch normalization layer
+        tf.keras.layers.BatchNormalization(),  
         tf.keras.layers.Dense(units=128, activation='relu'),
-        tf.keras.layers.Dropout(0.2),  # Add dropout layer for regularization
+        tf.keras.layers.Dropout(0.2),  
         tf.keras.layers.Dense(units=64, activation='relu'),
         tf.keras.layers.Dense(units=32, activation='relu'),
-        tf.keras.layers.Dense(units=1, activation='linear')  # Output layer (no activation function for regression)
+        tf.keras.layers.Dense(units=1, activation='linear')  
     ])
 
 # Compile the model
