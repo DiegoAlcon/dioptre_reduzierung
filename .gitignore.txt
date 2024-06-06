@@ -1,1 +1,2 @@
 *.keras
+not_important/
