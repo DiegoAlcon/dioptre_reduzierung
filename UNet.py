@@ -22,6 +22,7 @@ import tensorflow as tf
 from tensorflow.keras.applications import VGG16
 from keras import backend as K
 import keras_cv
+import re
 
 class BildPlotter:
     def __init__(self, images):
@@ -280,6 +281,10 @@ if __name__ == "__main__":
     
     images_files  = os.listdir(images_folder)
     masks_files = os.listdir(masks_folder)
+
+    r = re.compile(r'\d+')
+    images_files.sort(key=lambda x: int(r.search(x).group()))
+    masks_files.sort(key=lambda x: int(r.search(x).group()))
 
     #factor = int(input('Enter factor for downsamplig (possibe options: 10, 12, 15, 18, 20): '))
     #new_height = 4480 // factor

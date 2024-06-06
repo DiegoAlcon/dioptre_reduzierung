@@ -1,5 +1,3 @@
-# This program aims to perform the datapreparation stage and store them all in defined folders
-
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -31,13 +29,11 @@ class Bildvorverarbeitung:
         sample_exc = df['Sample'].tolist()
         diopt_pre = df['OPTIC OF - Pre VD PB'].tolist()
         diopt_post = df['OPTIC OF - Post VD PB'].tolist()
-        diopt_abs = df['OPTIC OF - Diopter'].tolist()
 
         number_of_images_in_folders = 0
         number_of_images_in_folders_and_excel = 0
         number_of_images_in_folders_and_excel_with_data = 0
 
-        #filename_list = []
         for directory in self.image_directory:
             directory_filenames = os.listdir(directory)
             for filename in directory_filenames:
@@ -58,25 +54,14 @@ class Bildvorverarbeitung:
                             idx = np.intersect1d(idx_title, idx_sample)[0] 
                         else:
                             continue
-
-                        #############################################################################################
                         if not(np.isnan(diopt_post[idx])) and not(np.isnan(diopt_pre[idx])):
                             number_of_images_in_folders_and_excel_with_data += 1
                             diopt_delta = diopt_post[idx] - diopt_pre[idx]
                         else:
-                            continue
-
-                        #if not(np.isnan(diopt_abs[idx])):
-                        #    number_of_images_in_folders_and_excel_with_data += 1
-                        #    diopt_delta = diopt_abs[idx]
-                        #else:
-                        #    continue
-                        ###############################################################################################
-                    
+                            continue                    
                     else:
                         continue
 
-                    #filename_list.append(filename)
                     images.append(cv2.imread(os.path.join(directory, filename), cv2.IMREAD_GRAYSCALE))
                     diopt.append(diopt_delta)
 
@@ -101,26 +86,29 @@ class Bildvorverarbeitung:
         return cropped_images
     
 if __name__ == "__main__":
+
+    whal = int(input('Enter 0 if NO artificially generated image should be included, enter 1 if more, artificially generated images should be included: '))
     # Kleiner Rechner
-    image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1_18_4", 
+    if whal == 0:
+        image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1_18_4", 
                        r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2_18_4", 
+                       ]
+    elif whal == 1:
+        image_directory = [r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled1_18_4", 
+                       r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\Labeled2_18_4", 
+                       r"C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\New_erzeugte_Blasen_after"
                        ] 
-    # Mittlerer Rechner
-    #image_directory = [r"C:\Users\SANCHDI2\dioptre_reduzierung\Labeled1_18_4",
-    #                   r"C:\Users\SANCHDI2\dioptre_reduzierung\Labeled2_18_4"
-    #                    ]
-    excel_directory = "example.xlsx"
-    image_processor = Bildvorverarbeitung(image_directory, excel_directory, target_height=4500, target_width=4500, x_offset=0, y_offset=0) 
+    excel_directory = "new_diopters.xlsx"
+    image_processor = Bildvorverarbeitung(image_directory, excel_directory, target_height=4504, target_width=4504, x_offset=0, y_offset=0) 
 
     images = image_processor.images[0]
     diopts = image_processor.images[1]
 
     images = image_processor.crop_images(images)
 
-    # Klein Rechner
+    # Klein Rechner the following Folder must be created before the program runs
     directory = r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\original\*'
-    # Mittlere Rechner
-    #directory = r"C:\Users\SANCHDI2\dioptre_reduzierung\original\*"
+    
     files = glob.glob(directory)
 
     for file in files:
@@ -132,8 +120,6 @@ if __name__ == "__main__":
         file_number += 1
         # Klein Rechner
         output_path = os.path.join(r'C:\Users\SANCHDI2\OneDrive - Alcon\GitHub\dioptre_reduzierung\original', f"original_{file_number}.jpg")
-        # Mittlere Rechner
-        #output_path = os.path.join(r"C:\Users\SANCHDI2\dioptre_reduzierung\original", f"original_{file_number}.jpg")
         plt.imsave(output_path, img, cmap='gray', pil_kwargs={'compress_level': 0})
 
     with open("test", "wb") as fp:   
